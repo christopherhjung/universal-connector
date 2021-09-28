@@ -1,14 +1,16 @@
 package com.github.christopherhjung.simplegcodesender
 
-import java.io.ByteArrayInputStream
-import java.io.InputStream
-import java.io.OutputStream
+import java.io.*
 import java.net.ServerSocket
 import java.net.Socket
 
 interface Connection{
-    val inputStream: InputStream
-    val outputStream: OutputStream
+    val connected: Boolean
+    val input: Input
+    val output: Output
+
+    fun requestInputStream() : InputStream
+    fun requestOutputStream() : OutputStream
 }
 
 interface Connector {
@@ -16,8 +18,17 @@ interface Connector {
 }
 
 class StdInOutConnection : Connection {
-    override val inputStream: InputStream = System.`in`
-    override val outputStream: OutputStream = System.out
+    override val input: Input = StreamInput(this)
+    override val output: Output = StreamOutput(this)
+    override val connected: Boolean = true
+
+    override fun requestInputStream(): InputStream {
+        return System.`in`
+    }
+
+    override fun requestOutputStream(): OutputStream {
+        return System.out
+    }
 }
 
 class StdInOutConnector : Connector{
@@ -27,8 +38,17 @@ class StdInOutConnector : Connector{
 }
 
 class StdOutConnection : Connection {
-    override val inputStream: InputStream = ByteArrayInputStream("".toByteArray())
-    override val outputStream: OutputStream = System.out
+    override val input: Input = StreamInput(this)
+    override val output: Output = StreamOutput(this)
+    override val connected: Boolean = true
+
+    override fun requestInputStream(): InputStream {
+        return ByteArrayInputStream("".toByteArray())
+    }
+
+    override fun requestOutputStream(): OutputStream {
+        return System.out
+    }
 }
 
 class StdOutConnector : Connector{
@@ -37,25 +57,69 @@ class StdOutConnector : Connector{
     }
 }
 
-class SocketConnector(socket: Socket) : Connection{
-    val connected: Boolean = socket.isConnected
-    override val inputStream: InputStream = socket.getInputStream()
-    override val outputStream: OutputStream = socket.getOutputStream()
+abstract class StreamConnection : Connection{
+    final override val input: Input = StreamInput(this)
+    final override val output: Output = StreamOutput(this)
+}
+
+class SocketConnection(val connector: Connector, val socket: Socket) : StreamConnection(){
+    override val connected: Boolean = socket.isConnected
+    //override val input: Input = StreamInput(this)
+    //override val output: Output = StreamOutput(this)
+
+    fun checkConnection(){
+
+    }
+
+    override fun requestInputStream(): InputStream {
+        return socket.getInputStream()
+    }
+
+    override fun requestOutputStream(): OutputStream {
+        return socket.getOutputStream()
+    }
 }
 
 class ServerConnector(port: Int) : Connector{
     private val server = ServerSocket(port)
     override fun open(): Connection {
-        return SocketConnector(server.accept())
+        return SocketConnection(server.accept())
     }
 }
 
-interface Source {
+interface Input {
     fun read() : String
 }
 
-interface Target {
+interface Output {
+
+
     fun write(line: String)
+}
+
+class StreamInput(val connection: Connection) : Input {
+    var reader = connection.requestInputStream().bufferedReader()
+
+    override fun read(): String {
+        if(!connection.connected){
+            reader = connection.requestInputStream().bufferedReader()
+        }
+
+        return reader.readLine()
+    }
+}
+
+class StreamOutput(val connection: Connection) : Output {
+    var writer = connection.requestOutputStream().bufferedWriter()
+
+    override fun write(line: String) {
+        if(!connection.connected){
+            writer = connection.requestOutputStream().bufferedWriter()
+        }
+
+        writer.write(line)
+        writer.newLine()
+    }
 }
 
 
