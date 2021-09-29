@@ -1,25 +1,20 @@
 package com.github.christopherhjung.simplegcodesender
 
-import java.io.InputStream
-import java.io.OutputStream
-import java.lang.Thread.interrupted
 
-class Worker(val inputStream: InputStream, val outputStream: OutputStream, val filters: List<Filter>) : Thread() {
+class Worker(val input: Input, val output: Output, val filters: List<FilterPart>) : Thread() {
     override fun run() {
-        val reader = inputStream.bufferedReader()
-        val writer = outputStream.bufferedWriter()
-        while(!interrupted()){
-            var line = reader.readLine() ?: return
+        try{
+            while(!interrupted()){
+                var line = input.read()
 
-            for( filter in filters ){
-                line = filter.filter(line)
+                for( filter in filters ){
+                    line = filter.filter(line)
+                }
+
+                output.write(line)
             }
-
-            writer.append(line)
-            writer.newLine()
-            writer.flush()
-
-            Thread.sleep(100)
+        }catch (ignore: EndInput){
+            ignore.printStackTrace()
         }
     }
 }

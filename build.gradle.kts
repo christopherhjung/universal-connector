@@ -25,8 +25,9 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.springframework:spring-websocket:5.3.9")
     implementation("org.springframework:spring-messaging:5.3.9")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    implementation("com.github.ajalt.clikt:clikt:3.2.0")
     implementation("com.fazecast:jSerialComm:2.7.0")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
 tasks.withType<KotlinCompile> {

@@ -1,52 +1,79 @@
 package com.github.christopherhjung.simplegcodesender
 
-import com.fazecast.jSerialComm.SerialPort
-import java.io.BufferedReader
-import java.io.IOException
-import java.lang.Thread.interrupted
-import java.net.ServerSocket
-import java.net.Socket
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.regex.Matcher
+import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.parameters.options.*
 import java.util.regex.Pattern
+import kotlin.reflect.KClass
 
+class Hello : CliktCommand() {
+    val first: String by option("--first", help="First connection").required()
+    val second: String by option("--second", help="Second connection").required()
+    val filters: List<String> by option("-f", help="Forward filters").multiple()
 
+    override fun run() {
+        val firstConnection = parse(first) as Connection
+        val secondConnection = parse(second) as Connection
 
+        val forwardFilters = mutableListOf<FilterPart>()
+        val backwardFilters = mutableListOf<FilterPart>()
 
-class Command(val code: String, val arguments: String)
-class CommandQueue(val items: LinkedBlockingQueue<Command> = LinkedBlockingQueue<Command>())
+        for( filter in filters ){
+            val mappedFilter = parse(filter) as Filter
+            forwardFilters.add(mappedFilter.forward())
+            backwardFilters.add(mappedFilter.backward())
+        }
 
-fun main(args: Array<String>) {
-    /*val port = SerialPort.getCommPort("ttyAMA0")
-    port.openPort()
-    var controllerWorker : ControllerWorker? = null
+        val forwardWorker = Worker(firstConnection.input, secondConnection.output, forwardFilters)
+        val backwardWorker = Worker(secondConnection.input, firstConnection.output, backwardFilters.reversed())
 
-    val queue = CommandQueue()
-    val deviceWorker = DeviceWorker(port, queue){
-        controllerWorker?.add(it)
+        forwardWorker.start()
+        backwardWorker.start()
     }
-    deviceWorker.run()
+}
+
+fun main(args: Array<String>) = Hello().main(args)
 
 
-    val server = ServerSocket(8080)
-    while(!interrupted()){
-        val socket = server.accept()
 
-        controllerWorker = ControllerWorker(socket, queue)
-        controllerWorker.run()
-    }*/
+fun parse(str: String) : Any{
 
-    val leftConnector : Connector = StdInOutConnector()
-    val rightConnector : Connector = StdOutConnector()
+    val map = mutableMapOf<String, KClass<*>>()
+    map["ClientConnection"] = ClientConnection::class
+    map["ServerConnection"] = ServerConnection::class
+    map["StdInOutConnection"] = StdInOutConnection::class
+    map["StdOutConnection"] = StdOutConnection::class
+    map["SerialConnection"] = SerialConnection::class
+    map["GCodeFilter"] = GCodeFilter::class
+    map["Loopback"] = Loopback::class
+    map["OkBuffer"] = OkBuffer::class
 
-    val leftConnection = leftConnector.open()
-    val rightConnection = rightConnector.open()
+    val pattern = Pattern.compile("(\\w+)\\((.*?)\\)")
+    val matcher = pattern.matcher(str)
 
-    val forwardWorker = Worker(leftConnection.inputStream, rightConnection.outputStream, listOf(GCodeFilter()))
-    val backwardWorker = Worker(rightConnection.inputStream, leftConnection.outputStream, listOf())
+    if(matcher.find()){
+        val className = matcher
+            .group(1)
 
-    forwardWorker.start()
-    backwardWorker.start()
+        val arguments = matcher
+            .group(2).replace(" +".toRegex(), "")
 
-    Thread.sleep(1000)
+        val splitArguments = arguments.split(",")
+
+        val objs = mutableListOf<Any>()
+
+        if(arguments.isNotBlank()){
+            for(argument in splitArguments){
+                if(argument.matches("\\d+".toRegex())){
+                    objs.add(argument.toInt())
+                }else{
+                    objs.add(argument)
+                }
+            }
+        }
+
+        val kclass = map[className]
+        return kclass!!.constructors.first().call(*objs.toTypedArray())
+    }
+
+    throw RuntimeException()
 }
