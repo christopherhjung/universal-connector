@@ -1,25 +1,35 @@
 package com.github.christopherhjung.simplegcodesender
 
+import kotlinx.coroutines.delay
 import java.io.BufferedReader
 import java.io.IOException
+import java.lang.Thread.sleep
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 object Utils {
-    @Throws(InterruptedException::class, IOException::class)
-    fun interruptibleReadLine(reader: BufferedReader): String {
+    fun interruptibleReadLine(reader: BufferedReader): String? {
         val line: Pattern = Pattern.compile("^(.*)\\R")
-        var matcher: Matcher
-        var interrupted = false
         val result = StringBuilder()
-        var chr = -1
-        do {
-            if (reader.ready()) chr = reader.read()
-            if (chr > -1) result.append(chr.toChar())
-            matcher = line.matcher(result.toString())
-            interrupted = Thread.interrupted() // resets flag, call only once
-        } while (!interrupted && !matcher.matches())
-        if (interrupted) throw InterruptedException()
-        return if (matcher.matches()) matcher.group(1) else ""
+        while(true) {
+            if (reader.ready()){
+                val chr = reader.read()
+                if (chr > -1){
+                    result.append(chr.toChar())
+                }else{
+                    return null
+                }
+
+                val matcher = line.matcher(result.toString())
+                if (Thread.interrupted()) throw InterruptedException()
+                if(matcher.matches()){
+                    return matcher.group(1)
+                }
+            }else{
+                sleep(100)
+            }
+        }
+
+        return result.toString()
     }
 }

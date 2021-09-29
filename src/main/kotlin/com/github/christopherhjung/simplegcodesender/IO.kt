@@ -3,6 +3,7 @@ package com.github.christopherhjung.simplegcodesender
 import com.github.christopherhjung.simplegcodesender.Utils.interruptibleReadLine
 import java.io.BufferedReader
 import java.io.BufferedWriter
+import java.io.PrintWriter
 import java.io.Writer
 import java.lang.RuntimeException
 
@@ -25,7 +26,14 @@ class StreamInput(val connection: Connection) : Input {
                 reader = connection.requestInputStream().bufferedReader()
             }
 
-            return interruptibleReadLine(reader!!)
+            val line = interruptibleReadLine(reader!!)
+
+            if(line == null){
+                reader = null
+                continue
+            }
+
+            return line
         }
     }
 }
@@ -37,15 +45,15 @@ interface Sink{
 }
 
 class StreamOutput(val connection: Connection) : Output, Sink {
-    private var writer: Writer? = null
+    private var writer: PrintWriter? = null
 
     override fun write(line: String) {
         var retry = true
         while(retry){
             retry = false
             try{
-                if(writer == null){
-                    writer = connection.requestOutputStream().bufferedWriter()
+                if(writer == null || writer?.checkError() == true){
+                    writer = PrintWriter(connection.requestOutputStream())
                 }
 
                 with(writer!!){

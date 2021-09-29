@@ -2,8 +2,14 @@ package com.github.christopherhjung.simplegcodesender
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 import java.util.regex.Pattern
 import kotlin.reflect.KClass
+
 
 class Hello : CliktCommand() {
     val first: String by option("--first", help="First connection").required()
@@ -11,6 +17,9 @@ class Hello : CliktCommand() {
     val filters: List<String> by option("-f", help="Forward filters").multiple()
 
     override fun run() {
+
+
+
         val firstConnection = parse(first) as Connection
         val secondConnection = parse(second) as Connection
 
@@ -26,13 +35,21 @@ class Hello : CliktCommand() {
         val forwardWorker = Worker(firstConnection.input, secondConnection.output, forwardFilters)
         val backwardWorker = Worker(secondConnection.input, firstConnection.output, backwardFilters.reversed())
 
+        Runtime.getRuntime().addShutdownHook(object : Thread() {
+            override fun run() = runBlocking {
+                firstConnection.close()
+                secondConnection.close()
+
+                return@runBlocking
+            }
+        })
+
         forwardWorker.start()
         backwardWorker.start()
     }
 }
 
 fun main(args: Array<String>) = Hello().main(args)
-
 
 
 fun parse(str: String) : Any{

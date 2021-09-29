@@ -27,6 +27,7 @@ dependencies {
     implementation("org.springframework:spring-messaging:5.3.9")
     implementation("com.github.ajalt.clikt:clikt:3.2.0")
     implementation("com.fazecast:jSerialComm:2.7.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 

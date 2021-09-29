@@ -2,12 +2,21 @@ package com.github.christopherhjung.simplegcodesender
 
 import com.fazecast.jSerialComm.SerialPort
 import com.fazecast.jSerialComm.SerialPort.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 import java.io.*
 import java.lang.RuntimeException
 import java.net.ServerSocket
 import java.net.Socket
 import java.net.SocketException
 import java.util.concurrent.Semaphore
+import javax.net.ServerSocketFactory
+import javax.net.SocketFactory
+import kotlin.system.measureTimeMillis
 
 interface Connection{
     val connected: Boolean
@@ -16,6 +25,8 @@ interface Connection{
 
     fun requestInputStream() : InputStream
     fun requestOutputStream() : OutputStream
+
+    fun close(){}
 }
 
 class StdInOutConnection : Connection {
@@ -53,12 +64,19 @@ abstract class StreamConnection : Connection{
     private val inputSemaphore = Semaphore(1)
     private val outputSemaphore = Semaphore(1)
 
-    abstract fun open()
+    var first = true
+
+    protected open fun open(){
+        first = false
+    }
     abstract fun getInputStream() : InputStream
     abstract fun getOutputStream() : OutputStream
 
     override fun requestInputStream(): InputStream {
         if(!connected){
+            if(!first){
+                getOutputStream().close()
+            }
             inputSemaphore.acquire()
             open()
             outputSemaphore.release()
@@ -68,6 +86,9 @@ abstract class StreamConnection : Connection{
 
     override fun requestOutputStream(): OutputStream {
         if(!connected){
+            if(!first){
+                getInputStream().close()
+            }
             inputSemaphore.release()
             outputSemaphore.acquire()
         }
@@ -76,12 +97,13 @@ abstract class StreamConnection : Connection{
 }
 
 class ServerConnection(port: Int) : StreamConnection(){
-    private val server = ServerSocket(port)
+    private val server = ServerSocketFactory.getDefault().createServerSocket(port)
     private var socket: Socket? = null
     override val connected: Boolean = socket?.isConnected ?: false
 
     override fun open(){
         socket = server.accept()
+        super.open()
     }
 
     override fun getInputStream() : InputStream {
@@ -90,6 +112,11 @@ class ServerConnection(port: Int) : StreamConnection(){
 
     override fun getOutputStream() : OutputStream {
         return socket!!.getOutputStream()
+    }
+
+    override fun close() {
+        socket?.close()
+        server.close()
     }
 }
 
@@ -103,14 +130,19 @@ class SerialConnection(val name: String) : StreamConnection(){
             setComPortTimeouts( TIMEOUT_READ_BLOCKING, 1000000000,0)
             openPort()
         }
+        super.open()
     }
 
     override fun getInputStream() : InputStream {
-        return port!!.inputStream//inputStreamWithSuppressedTimeoutExceptions
+        return port!!.inputStream
     }
 
     override fun getOutputStream() : OutputStream {
         return port!!.outputStream
+    }
+
+    override fun close() {
+        port?.closePort()
     }
 }
 
@@ -119,8 +151,6 @@ class Loopback : StreamConnection(){
     val outputStream = PipedOutputStream(inputStream)
     override val connected: Boolean = true
 
-    override fun open(){
-    }
 
     override fun getInputStream() : InputStream {
         return inputStream
@@ -136,7 +166,8 @@ class ClientConnection(val host: String, val port: Int) : StreamConnection(){
     override val connected: Boolean = socket?.isConnected ?: false
 
     override fun open(){
-        socket = Socket(host, port)
+        socket = SocketFactory.getDefault().createSocket(host, port)
+        super.open()
     }
 
     override fun getInputStream() : InputStream {
@@ -146,6 +177,9 @@ class ClientConnection(val host: String, val port: Int) : StreamConnection(){
     override fun getOutputStream() : OutputStream {
         return socket!!.getOutputStream()
     }
-}
 
+    override fun close() {
+        socket?.close()
+    }
+}
 
