@@ -64,19 +64,12 @@ abstract class StreamConnection : Connection{
     private val inputSemaphore = Semaphore(1)
     private val outputSemaphore = Semaphore(1)
 
-    var first = true
-
-    protected open fun open(){
-        first = false
-    }
+    abstract fun open()
     abstract fun getInputStream() : InputStream
     abstract fun getOutputStream() : OutputStream
 
     override fun requestInputStream(): InputStream {
         if(!connected){
-            if(!first){
-                getOutputStream().close()
-            }
             inputSemaphore.acquire()
             open()
             outputSemaphore.release()
@@ -86,9 +79,6 @@ abstract class StreamConnection : Connection{
 
     override fun requestOutputStream(): OutputStream {
         if(!connected){
-            if(!first){
-                getInputStream().close()
-            }
             inputSemaphore.release()
             outputSemaphore.acquire()
         }
@@ -103,7 +93,6 @@ class ServerConnection(port: Int) : StreamConnection(){
 
     override fun open(){
         socket = server.accept()
-        super.open()
     }
 
     override fun getInputStream() : InputStream {
@@ -130,7 +119,6 @@ class SerialConnection(val name: String) : StreamConnection(){
             setComPortTimeouts( TIMEOUT_READ_BLOCKING, 1000000000,0)
             openPort()
         }
-        super.open()
     }
 
     override fun getInputStream() : InputStream {
@@ -151,6 +139,8 @@ class Loopback : StreamConnection(){
     val outputStream = PipedOutputStream(inputStream)
     override val connected: Boolean = true
 
+    override fun open(){
+    }
 
     override fun getInputStream() : InputStream {
         return inputStream
@@ -167,7 +157,6 @@ class ClientConnection(val host: String, val port: Int) : StreamConnection(){
 
     override fun open(){
         socket = SocketFactory.getDefault().createSocket(host, port)
-        super.open()
     }
 
     override fun getInputStream() : InputStream {

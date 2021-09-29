@@ -52,7 +52,7 @@ class StreamOutput(val connection: Connection) : Output, Sink {
         while(retry){
             retry = false
             try{
-                if(writer == null || writer?.checkError() == true){
+                if(writer == null ){
                     writer = PrintWriter(connection.requestOutputStream())
                 }
 
