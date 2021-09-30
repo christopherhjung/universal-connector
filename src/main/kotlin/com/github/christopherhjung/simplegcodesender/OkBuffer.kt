@@ -8,7 +8,6 @@ class OkBuffer() : Transformer{
     val blocker = OkBlocker(sem)
     val opener = OkOpener(sem)
 
-
     override fun forward(): TransformerGate {
         return blocker
     }
@@ -26,11 +25,9 @@ class OkBlocker(val sem: Semaphore) : TransformerGate(){
 }
 
 class OkOpener(val sem: Semaphore) : TransformerGate(){
-    var last = 0L
     override fun loop() {
-        val input = adapter.take()
         sem.release()
-        adapter.offer(input)
+        adapter.offer(adapter.take())
     }
 }
 
