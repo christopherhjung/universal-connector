@@ -2,11 +2,9 @@ package com.github.christopherhjung.simplegcodesender
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.*
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.regex.Pattern
 import kotlin.reflect.KClass
 
@@ -16,10 +14,32 @@ class Hello : CliktCommand() {
     val second: String by option("--second", help="Second connection").required()
     val filters: List<String> by option("-f", help="Forward filters").multiple()
 
+    fun connect(input: BlockingQueue<String>, output: BlockingQueue<String>, filters: List<FilterPart>){
+        val queues = mutableListOf<BlockingQueue<String>>()
+        queues.add(input)
+
+        val filters = filters.toMutableList()
+
+
+        if(filters.isEmpty()){
+            filters.add(NoFilter)
+        }else repeat(filters.size - 1){
+            queues.add(LinkedBlockingQueue())
+        }
+
+        queues.add(output)
+
+        val progresses = mutableListOf<FilterProgress>()
+
+        for(element in queues.zipWithNext().zip(filters)){
+            val (queue, filter) = element
+            val adapter = Adapter(queue.first, queue.second)
+            val progress = FilterProgress(adapter, filter)
+            progresses.add(progress)
+        }
+    }
+
     override fun run() {
-
-
-
         val firstConnection = parse(first) as Connection
         val secondConnection = parse(second) as Connection
 
@@ -32,20 +52,19 @@ class Hello : CliktCommand() {
             backwardFilters.add(mappedFilter.backward())
         }
 
-        val forwardWorker = Worker(firstConnection.input, secondConnection.output, forwardFilters)
-        val backwardWorker = Worker(secondConnection.input, firstConnection.output, backwardFilters.reversed())
+        connect(firstConnection.input.queue, secondConnection.output.queue, forwardFilters)
+        connect(secondConnection.input.queue, firstConnection.output.queue, backwardFilters.reversed())
+
+        firstConnection.start()
+        secondConnection.start()
 
         Runtime.getRuntime().addShutdownHook(object : Thread() {
             override fun run() = runBlocking {
-                firstConnection.close()
-                secondConnection.close()
-
-                return@runBlocking
+                firstConnection.stop()
+                secondConnection.stop()
             }
         })
 
-        forwardWorker.start()
-        backwardWorker.start()
     }
 }
 

@@ -1,9 +1,35 @@
 package com.github.christopherhjung.simplegcodesender
 
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.LinkedBlockingQueue
+import kotlin.concurrent.thread
+
 class GCodeFilter() : Filter{
     val part = GCodeFilterPart()
     override fun forward(): FilterPart {
         return part
+    }
+}
+
+class Adapter(
+    private val input: BlockingQueue<String>,
+    private val output: BlockingQueue<String>){
+    fun take() : String{
+        return input.take()
+    }
+
+    fun offer(str: String){
+        output.offer(str)
+    }
+}
+
+class FilterProgress(val adapter : Adapter, val filterPart: FilterPart){
+    private val thread = thread {
+        while(true){
+            var str = adapter.take()
+            str = filterPart.filter(str)
+            adapter.offer(str)
+        }
     }
 }
 
