@@ -1,7 +1,7 @@
 package com.github.christopherhjung.simplegcodesender
 
 import java.util.concurrent.BlockingQueue
-import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
 class GCodeFilter() : Filter{
@@ -21,22 +21,24 @@ class Adapter(
     fun offer(str: String){
         output.offer(str)
     }
+
+    fun poll(millis: Long) : String?{
+        return input.poll(millis, TimeUnit.MILLISECONDS)
+    }
 }
 
 class FilterProgress(val adapter : Adapter, val filterPart: FilterPart){
     private val thread = thread {
         while(true){
-            filterPart.filter(adapter.take()){
-                adapter.offer(it)
-            }
+            filterPart.filter(adapter)
         }
     }
 }
 
 class GCodeFilterPart() : FilterPart{
     var lastCode: String = "G0"
-    override fun filter(input: String, callback : (String) -> Unit) {
-        val line = input.trim().replace(" +".toRegex(), " ")
+    override fun filter(adapter: Adapter) {
+        val line = adapter.take().trim().replace(" +".toRegex(), " ")
 
         val command = if(!line.matches("[XYZIJKF].+".toRegex(RegexOption.IGNORE_CASE))){
             val index = line.indexOf(" ")
@@ -51,10 +53,10 @@ class GCodeFilterPart() : FilterPart{
         }
 
         if(command == "FIRMWARE_RESTART" || command == "r"){
-            return callback("FIRMWARE_RESTART")
+            return adapter.offer("FIRMWARE_RESTART")
         }
 
-        callback("$command*${Checksum.xor(command)}")
+        adapter.offer("$command*${Checksum.xor(command)}")
     }
 }
 

@@ -48,8 +48,17 @@ class Hello : CliktCommand() {
 
         for( filter in filters ){
             val mappedFilter = parse(filter) as Filter
-            forwardFilters.add(mappedFilter.forward())
-            backwardFilters.add(mappedFilter.backward())
+
+            val forward = mappedFilter.forward()
+            val backward = mappedFilter.backward()
+
+            if(forward == NoFilter){
+                forwardFilters.add(forward)
+            }
+
+            if(backward == NoFilter){
+                backwardFilters.add(backward)
+            }
         }
 
         connect(firstConnection.input.queue, secondConnection.output.queue, forwardFilters)
