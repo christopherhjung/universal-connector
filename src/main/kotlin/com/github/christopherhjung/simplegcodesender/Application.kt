@@ -17,6 +17,8 @@ class Hello : CliktCommand() {
     val second: String by option("--second", help="Second connection").required()
     val filters: List<String> by option("-f", help="Forward filters").multiple()
 
+    val progresses = mutableListOf<FilterProgress>()
+
     private fun connect(input: BlockingQueue<String>, output: BlockingQueue<String>, filters: List<FilterPart>){
         val queues = mutableListOf<BlockingQueue<String>>()
         queues.add(input)
@@ -31,11 +33,10 @@ class Hello : CliktCommand() {
 
         queues.add(output)
 
-        val progresses = mutableListOf<FilterProgress>()
-
         for(element in queues.zipWithNext().zip(filters)){
             val (queue, filter) = element
             val adapter = Adapter(queue.first, queue.second)
+            filter.setup(adapter)
             val progress = FilterProgress(adapter, filter)
             progresses.add(progress)
         }
@@ -84,6 +85,10 @@ class Hello : CliktCommand() {
         connect(firstConnection.input.queue, secondConnection.output.queue, forwardFilters)
         connect(secondConnection.input.queue, firstConnection.output.queue, backwardFilters.reversed())
 
+        for(progress in progresses){
+            progress.start()
+        }
+
         firstConnection.start()
         secondConnection.start()
 
@@ -93,12 +98,10 @@ class Hello : CliktCommand() {
                 secondConnection.stop()
             }
         })
-
     }
 }
 
 fun parse(str: String, map: Map<String, KClass<*>>) : Any{
-
     val pattern = Pattern.compile("(\\w+)\\((.*?)\\)")
     val matcher = pattern.matcher(str)
 
