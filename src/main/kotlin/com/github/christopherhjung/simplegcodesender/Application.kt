@@ -102,8 +102,8 @@ class Hello : CliktCommand() {
 }
 
 fun parse(str: String, map: Map<String, KClass<*>>) : Any{
-    val pattern = Pattern.compile("(\\w+)\\((.*?)\\)")
-    val matcher = pattern.matcher(str)
+    val pattern = Pattern.compile("^(\\w+)\\((.*)\\)$")
+    val matcher = pattern.matcher(str.trim())
 
     if(matcher.find()){
         val className = matcher
@@ -127,7 +127,13 @@ fun parse(str: String, map: Map<String, KClass<*>>) : Any{
         }
 
         val kclass = map[className]
-        return kclass!!.constructors.first().call(*objs.toTypedArray())
+        for(constructor in kclass!!.constructors){
+            try{
+                return constructor.call(*objs.toTypedArray())
+            }catch (ignore:Exception){
+                ignore.printStackTrace()
+            }
+        }
     }
 
     throw RuntimeException()

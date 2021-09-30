@@ -3,11 +3,9 @@ package com.github.christopherhjung.simplegcodesender
 import java.io.File
 
 
-class FileLoader(dir: String, pattern: String ) : Filter{
+class FileLoader(dir: String = "./", pattern: String = "^!(.+)$" ) : Filter{
     private val success = FileLoadSuccessPart()
     private val part = FileLoaderPart(dir, pattern.toRegex(), success)
-
-    constructor() : this("./", "^!(.+)$")
 
     override fun forward(): FilterPart {
         return part
