@@ -1,5 +1,6 @@
 package com.github.christopherhjung.simplegcodesender
 
+import java.io.File
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 
@@ -73,8 +74,8 @@ class OkFilterPart() : FilterPart{
 
 
 
-class PositionObserver() : Filter{
-    private val part = PositionObserverPart()
+class PositionObserver(time: Number) : Filter{
+    private val part = PositionObserverPart(time.toLong())
 
     override fun forward(): FilterPart {
         return part
@@ -85,14 +86,68 @@ class PositionObserver() : Filter{
     }
 }
 
-class PositionObserverPart() : FilterPart{
+class PositionObserverPart(val delay: Long) : FilterPart{
     var last = System.currentTimeMillis()
+
     override fun filter(adapter: Adapter) {
-        adapter.poll(1000)
+        val line = adapter.poll(delay)
+        if(line != null){
+            adapter.offer(line)
+        }
         val current = System.currentTimeMillis()
-        if(current - last > 1000){
+        if(current - last > delay){
             adapter.offer("M114")
             last = current
         }
     }
 }
+
+
+
+
+class FileLoader(val dir: String = "") : Filter{
+    private val success = FileLoadSuccessPart()
+    private val part = FileLoaderPart(dir, success)
+
+    override fun forward(): FilterPart {
+        return part
+    }
+
+    override fun backward(): FilterPart {
+        return NoFilter
+    }
+}
+
+class FileLoadSuccessPart() : FilterPart{
+    var last = System.currentTimeMillis()
+
+    override fun filter(adapter: Adapter) {
+        adapter.offer(adapter.take())
+    }
+
+    fun success(fileName: String){
+
+    }
+}
+
+class FileLoaderPart(val dir: String, val success : FileLoadSuccessPart) : FilterPart{
+    var last = System.currentTimeMillis()
+
+    override fun filter(adapter: Adapter) {
+        val line = adapter.take()
+        if(line.startsWith("!")){
+            val file = line.drop(1).trim()
+            val lines = File(dir, file).readLines()
+            for(fileLine in lines){
+                adapter.offer(fileLine)
+            }
+            success.success(file)
+        }else{
+            adapter.offer(line)
+        }
+    }
+}
+
+
+
+

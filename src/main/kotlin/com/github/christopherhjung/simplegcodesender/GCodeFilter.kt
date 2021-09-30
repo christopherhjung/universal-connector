@@ -1,5 +1,6 @@
 package com.github.christopherhjung.simplegcodesender
 
+import java.io.File
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
@@ -59,4 +60,6 @@ class GCodeFilterPart() : FilterPart{
         adapter.offer("$command*${Checksum.xor(command)}")
     }
 }
+
+
 

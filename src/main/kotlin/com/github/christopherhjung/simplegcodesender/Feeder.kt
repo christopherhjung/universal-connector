@@ -19,15 +19,7 @@ class InputFeeder(connection: Connection, val queue: BlockingQueue<String>){
 
                 val line = Utils.interruptableReadLine(reader!!)
 
-                if(line.startsWith("!")){
-                    val file = line.drop(1).trim()
-                    val lines = File(file).readLines()
-                    for(fileLine in lines){
-                        queue.offer(fileLine)
-                    }
-                }else{
-                    queue.offer(line)
-                }
+                queue.offer(line)
             }catch (ignore: Exception){
                 if(closing){
                     break

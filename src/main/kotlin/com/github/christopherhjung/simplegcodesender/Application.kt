@@ -52,11 +52,11 @@ class Hello : CliktCommand() {
             val forward = mappedFilter.forward()
             val backward = mappedFilter.backward()
 
-            if(forward == NoFilter){
+            if(forward != NoFilter){
                 forwardFilters.add(forward)
             }
 
-            if(backward == NoFilter){
+            if(backward != NoFilter){
                 backwardFilters.add(backward)
             }
         }
@@ -92,6 +92,7 @@ fun parse(str: String) : Any{
     map["Loopback"] = Loopback::class
     map["OkBuffer"] = OkBuffer::class
     map["OkFilter"] = OkFilter::class
+    map["PositionObserver"] = PositionObserver::class
 
     val pattern = Pattern.compile("(\\w+)\\((.*?)\\)")
     val matcher = pattern.matcher(str)
