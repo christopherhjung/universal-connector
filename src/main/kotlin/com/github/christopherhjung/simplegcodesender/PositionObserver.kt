@@ -1,19 +1,19 @@
 package com.github.christopherhjung.simplegcodesender
 
 
-class PositionObserver(time: Number) : Filter{
-    private val part = PositionObserverPart(time.toLong())
+class PositionObserver(time: Number) : Transformer{
+    private val part = PositionObserverGate(time.toLong())
 
-    override fun forward(): FilterPart {
+    override fun forward(): TransformerGate {
         return part
     }
 
-    override fun backward(): FilterPart {
-        return NoFilter
+    override fun backward(): TransformerGate {
+        return NoEffect
     }
 }
 
-class PositionObserverPart(val delay: Long) : FilterPart(){
+class PositionObserverGate(val delay: Long) : TransformerGate(){
     var last = System.currentTimeMillis()
 
     override fun loop() {

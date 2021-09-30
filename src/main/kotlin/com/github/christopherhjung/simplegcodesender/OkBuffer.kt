@@ -3,29 +3,29 @@ package com.github.christopherhjung.simplegcodesender
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 
-class OkBuffer() : Filter{
+class OkBuffer() : Transformer{
     val sem = Semaphore(1)
     val blocker = OkBlocker(sem)
     val opener = OkOpener(sem)
 
 
-    override fun forward(): FilterPart {
+    override fun forward(): TransformerGate {
         return blocker
     }
 
-    override fun backward(): FilterPart {
+    override fun backward(): TransformerGate {
         return opener
     }
 }
 
-class OkBlocker(val sem: Semaphore) : FilterPart(){
+class OkBlocker(val sem: Semaphore) : TransformerGate(){
     override fun loop() {
         sem.tryAcquire(20000, TimeUnit.MILLISECONDS)
         adapter.offer(adapter.take())
     }
 }
 
-class OkOpener(val sem: Semaphore) : FilterPart(){
+class OkOpener(val sem: Semaphore) : TransformerGate(){
     var last = 0L
     override fun loop() {
         val input = adapter.take()
@@ -35,19 +35,19 @@ class OkOpener(val sem: Semaphore) : FilterPart(){
 }
 
 
-class OkFilter() : Filter{
-    private val part = OkFilterPart()
+class OkTransformer() : Transformer{
+    private val part = OkTransformerGate()
 
-    override fun forward(): FilterPart {
-        return NoFilter
+    override fun forward(): TransformerGate {
+        return NoEffect
     }
 
-    override fun backward(): FilterPart {
+    override fun backward(): TransformerGate {
         return part
     }
 }
 
-class OkFilterPart() : FilterPart(){
+class OkTransformerGate() : TransformerGate(){
     var counter = 0
     var last = 0L
     override fun loop() {

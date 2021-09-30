@@ -17,16 +17,16 @@ class Hello : CliktCommand() {
     val second: String by option("--second", help="Second connection").required()
     val filters: List<String> by option("-f", help="Forward filters").multiple()
 
-    val progresses = mutableListOf<FilterProgress>()
+    val progresses = mutableListOf<TransformerRunner>()
 
-    private fun connect(input: BlockingQueue<String>, output: BlockingQueue<String>, filters: List<FilterPart>){
+    private fun connect(input: BlockingQueue<String>, output: BlockingQueue<String>, filters: List<TransformerGate>){
         val queues = mutableListOf<BlockingQueue<String>>()
         queues.add(input)
 
         val filters = filters.toMutableList()
 
         if(filters.isEmpty()){
-            filters.add(NoFilter)
+            filters.add(NoEffect)
         }else repeat(filters.size - 1){
             queues.add(LinkedBlockingQueue())
         }
@@ -37,7 +37,7 @@ class Hello : CliktCommand() {
             val (queue, filter) = element
             val adapter = Adapter(queue.first, queue.second)
             filter.setup(adapter)
-            val progress = FilterProgress(adapter, filter)
+            val progress = TransformerRunner(filter)
             progresses.add(progress)
         }
     }
@@ -49,10 +49,10 @@ class Hello : CliktCommand() {
         map["StdInOutConnection"] = StdInOutConnection::class
         map["StdOutConnection"] = StdOutConnection::class
         map["SerialConnection"] = SerialConnection::class
-        map["GCodeFilter"] = GCodeFilter::class
+        map["GCodeFilter"] = GCodeTransformer::class
         map["Loopback"] = Loopback::class
         map["OkBuffer"] = OkBuffer::class
-        map["OkFilter"] = OkFilter::class
+        map["OkFilter"] = OkTransformer::class
         map["PositionObserver"] = PositionObserver::class
         map["FileLoader"] = FileLoader::class
         return map
@@ -64,20 +64,20 @@ class Hello : CliktCommand() {
         val firstConnection = parse(first, map) as Connection
         val secondConnection = parse(second, map) as Connection
 
-        val forwardFilters = mutableListOf<FilterPart>()
-        val backwardFilters = mutableListOf<FilterPart>()
+        val forwardFilters = mutableListOf<TransformerGate>()
+        val backwardFilters = mutableListOf<TransformerGate>()
 
         for( filter in filters ){
-            val mappedFilter = parse(filter, map) as Filter
+            val mappedFilter = parse(filter, map) as Transformer
 
             val forward = mappedFilter.forward()
             val backward = mappedFilter.backward()
 
-            if(forward != NoFilter){
+            if(forward != NoEffect){
                 forwardFilters.add(forward)
             }
 
-            if(backward != NoFilter){
+            if(backward != NoEffect){
                 backwardFilters.add(backward)
             }
         }

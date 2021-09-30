@@ -1,13 +1,13 @@
 package com.github.christopherhjung.simplegcodesender
 
-class GCodeFilter() : Filter{
-    val part = GCodeFilterPart()
-    override fun forward(): FilterPart {
+class GCodeTransformer() : Transformer{
+    val part = GCodeTransformerGate()
+    override fun forward(): TransformerGate {
         return part
     }
 }
 
-class GCodeFilterPart() : FilterPart(){
+class GCodeTransformerGate() : TransformerGate(){
     private var lastCode: String = "G0"
     override fun loop() {
         val line = adapter.take().trim().replace(" +".toRegex(), " ")

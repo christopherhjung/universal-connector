@@ -4,20 +4,20 @@ import java.io.File
 import java.io.FileNotFoundException
 
 
-class FileLoader(dir: String = "./", pattern: String = "^!(.+)$" ) : Filter{
-    private val success = FileLoadSuccessPart()
-    private val part = FileLoaderPart(dir, pattern.toRegex(), success)
+class FileLoader(dir: String = "./", pattern: String = "^!(.+)$" ) : Transformer{
+    private val success = FileLoadSuccessGate()
+    private val part = FileLoaderGate(dir, pattern.toRegex(), success)
 
-    override fun forward(): FilterPart {
+    override fun forward(): TransformerGate {
         return part
     }
 
-    override fun backward(): FilterPart {
+    override fun backward(): TransformerGate {
         return success
     }
 }
 
-class FileLoadSuccessPart() : FilterPart(){
+class FileLoadSuccessGate() : TransformerGate(){
     override fun loop() {
         adapter.offer(adapter.take())
     }
@@ -31,7 +31,7 @@ class FileLoadSuccessPart() : FilterPart(){
     }
 }
 
-class FileLoaderPart(val dir: String, val pattern: Regex, val success : FileLoadSuccessPart) : FilterPart(){
+class FileLoaderGate(val dir: String, val pattern: Regex, val success : FileLoadSuccessGate) : TransformerGate(){
     override fun loop() {
         val line = adapter.take()
 

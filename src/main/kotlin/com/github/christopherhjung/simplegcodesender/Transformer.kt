@@ -1,12 +1,12 @@
 package com.github.christopherhjung.simplegcodesender
 
-object NoFilter : FilterPart(){
+object NoEffect : TransformerGate(){
     override fun loop() {
         adapter.offer(adapter.take())
     }
 }
 
-abstract class FilterPart{
+abstract class TransformerGate{
     protected lateinit var adapter: Adapter
     abstract fun loop()
     fun setup(adapter: Adapter){
@@ -14,13 +14,13 @@ abstract class FilterPart{
     }
 }
 
-interface Filter {
-    fun forward() : FilterPart{
-        return NoFilter
+interface Transformer {
+    fun forward() : TransformerGate{
+        return NoEffect
     }
 
-    fun backward() : FilterPart{
-        return NoFilter
+    fun backward() : TransformerGate{
+        return NoEffect
     }
 }
 

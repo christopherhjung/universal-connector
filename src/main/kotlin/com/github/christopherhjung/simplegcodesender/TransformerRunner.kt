@@ -2,10 +2,10 @@ package com.github.christopherhjung.simplegcodesender
 
 import kotlin.concurrent.thread
 
-class FilterProgress(val adapter : Adapter, val filterPart: FilterPart){
+class TransformerRunner(val transformerGate: TransformerGate){
     private val thread = thread(false) {
         while(true){
-            filterPart.loop()
+            transformerGate.loop()
         }
     }
 
