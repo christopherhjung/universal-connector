@@ -19,19 +19,53 @@ class OkBuffer() : Filter{
 }
 
 class OkBlocker(val sem: Semaphore) : FilterPart{
-    override fun filter(input: String): String {
+    override fun filter(input: String, callback : (String) -> Unit) {
         sem.tryAcquire(20000, TimeUnit.MILLISECONDS)
-        return input
+        callback(input)
     }
 }
 
 class OkOpener(val sem: Semaphore) : FilterPart{
-    override fun filter(input: String): String {
-        if(input == "ok"){
-            sem.release()
-        }
+    var last = 0L
+    override fun filter(input: String, callback : (String) -> Unit) {
+        sem.release()
+        callback(input)
+    }
+}
 
-        return input
+
+class OkFilter() : Filter{
+    private val part = OkFilterPart()
+
+    override fun forward(): FilterPart {
+        return NoFilter
+    }
+
+    override fun backward(): FilterPart {
+        return part
+    }
+}
+
+class OkFilterPart() : FilterPart{
+    var counter = 0
+    var last = 0L
+    override fun filter(input: String, callback : (String) -> Unit) {
+        if(input == "ok"){
+            counter++
+
+            val current = System.currentTimeMillis()
+            if( current - last > 1000 ){
+                if(counter == 1){
+                    callback("ok")
+                }else{
+                    callback("$counter*ok")
+                }
+                counter = 0
+                last = current
+            }
+        }else{
+            callback(input)
+        }
     }
 }
 

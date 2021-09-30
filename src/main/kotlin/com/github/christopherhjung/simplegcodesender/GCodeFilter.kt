@@ -26,16 +26,16 @@ class Adapter(
 class FilterProgress(val adapter : Adapter, val filterPart: FilterPart){
     private val thread = thread {
         while(true){
-            var str = adapter.take()
-            str = filterPart.filter(str)
-            adapter.offer(str)
+            filterPart.filter(adapter.take()){
+                adapter.offer(it)
+            }
         }
     }
 }
 
 class GCodeFilterPart() : FilterPart{
     var lastCode: String = "G0"
-    override fun filter(input: String): String {
+    override fun filter(input: String, callback : (String) -> Unit) {
         val line = input.trim().replace(" +".toRegex(), " ")
 
         val command = if(!line.matches("[XYZIJKF].+".toRegex(RegexOption.IGNORE_CASE))){
@@ -51,10 +51,10 @@ class GCodeFilterPart() : FilterPart{
         }
 
         if(command == "FIRMWARE_RESTART" || command == "r"){
-            return "FIRMWARE_RESTART"
+            return callback("FIRMWARE_RESTART")
         }
 
-        return "$command*${Checksum.xor(command)}"
+        callback("$command*${Checksum.xor(command)}")
     }
 }
 

@@ -82,6 +82,7 @@ fun parse(str: String) : Any{
     map["GCodeFilter"] = GCodeFilter::class
     map["Loopback"] = Loopback::class
     map["OkBuffer"] = OkBuffer::class
+    map["OkFilter"] = OkFilter::class
 
     val pattern = Pattern.compile("(\\w+)\\((.*?)\\)")
     val matcher = pattern.matcher(str)

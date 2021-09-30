@@ -1,13 +1,13 @@
 package com.github.christopherhjung.simplegcodesender
 
 object NoFilter : FilterPart{
-    override fun filter(input: String): String {
-        return input
+    override fun filter(input: String, callback : (String) -> Unit) {
+        callback(input)
     }
 }
 
 interface FilterPart{
-    fun filter(input: String) : String
+    fun filter(input: String, callback : (String) -> Unit)
 }
 
 interface Filter {
