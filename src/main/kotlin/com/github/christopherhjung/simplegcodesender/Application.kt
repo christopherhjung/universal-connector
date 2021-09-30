@@ -93,7 +93,11 @@ class Hello : CliktCommand() {
         secondConnection.start()
 
         Runtime.getRuntime().addShutdownHook(object : Thread() {
-            override fun run() = runBlocking {
+            override fun run() {
+                for(progress in progresses){
+                    progress.stop()
+                }
+
                 firstConnection.stop()
                 secondConnection.stop()
             }

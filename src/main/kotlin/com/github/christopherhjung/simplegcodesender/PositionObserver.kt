@@ -7,10 +7,6 @@ class PositionObserver(time: Number) : Transformer{
     override fun forward(): TransformerGate {
         return part
     }
-
-    override fun backward(): TransformerGate {
-        return NoEffect
-    }
 }
 
 class PositionObserverGate(val delay: Long) : TransformerGate(){

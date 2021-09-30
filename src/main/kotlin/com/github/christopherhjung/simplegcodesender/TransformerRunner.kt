@@ -12,4 +12,9 @@ class TransformerRunner(val transformerGate: TransformerGate){
     fun start(){
         thread.start()
     }
+
+    fun stop(){
+        thread.interrupt()
+        thread.join()
+    }
 }
