@@ -1,25 +1,27 @@
 package com.github.christopherhjung.simplegcodesender
 
 import com.github.ajalt.clikt.core.CliktCommand
-import com.github.ajalt.clikt.parameters.options.*
+import com.github.ajalt.clikt.parameters.options.multiple
+import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.options.required
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.regex.Pattern
 import kotlin.reflect.KClass
 
+fun main(args: Array<String>) = Hello().main(args)
 
 class Hello : CliktCommand() {
     val first: String by option("--first", help="First connection").required()
     val second: String by option("--second", help="Second connection").required()
     val filters: List<String> by option("-f", help="Forward filters").multiple()
 
-    fun connect(input: BlockingQueue<String>, output: BlockingQueue<String>, filters: List<FilterPart>){
+    private fun connect(input: BlockingQueue<String>, output: BlockingQueue<String>, filters: List<FilterPart>){
         val queues = mutableListOf<BlockingQueue<String>>()
         queues.add(input)
 
         val filters = filters.toMutableList()
-
 
         if(filters.isEmpty()){
             filters.add(NoFilter)
@@ -39,15 +41,33 @@ class Hello : CliktCommand() {
         }
     }
 
+    private fun createClassMap() : Map<String, KClass<*>>{
+        val map = mutableMapOf<String, KClass<*>>()
+        map["ClientConnection"] = ClientConnection::class
+        map["ServerConnection"] = ServerConnection::class
+        map["StdInOutConnection"] = StdInOutConnection::class
+        map["StdOutConnection"] = StdOutConnection::class
+        map["SerialConnection"] = SerialConnection::class
+        map["GCodeFilter"] = GCodeFilter::class
+        map["Loopback"] = Loopback::class
+        map["OkBuffer"] = OkBuffer::class
+        map["OkFilter"] = OkFilter::class
+        map["PositionObserver"] = PositionObserver::class
+        map["FileLoader"] = FileLoader::class
+        return map
+    }
+
     override fun run() {
-        val firstConnection = parse(first) as Connection
-        val secondConnection = parse(second) as Connection
+        val map = createClassMap()
+
+        val firstConnection = parse(first, map) as Connection
+        val secondConnection = parse(second, map) as Connection
 
         val forwardFilters = mutableListOf<FilterPart>()
         val backwardFilters = mutableListOf<FilterPart>()
 
         for( filter in filters ){
-            val mappedFilter = parse(filter) as Filter
+            val mappedFilter = parse(filter, map) as Filter
 
             val forward = mappedFilter.forward()
             val backward = mappedFilter.backward()
@@ -77,22 +97,7 @@ class Hello : CliktCommand() {
     }
 }
 
-fun main(args: Array<String>) = Hello().main(args)
-
-
-fun parse(str: String) : Any{
-
-    val map = mutableMapOf<String, KClass<*>>()
-    map["ClientConnection"] = ClientConnection::class
-    map["ServerConnection"] = ServerConnection::class
-    map["StdInOutConnection"] = StdInOutConnection::class
-    map["StdOutConnection"] = StdOutConnection::class
-    map["SerialConnection"] = SerialConnection::class
-    map["GCodeFilter"] = GCodeFilter::class
-    map["Loopback"] = Loopback::class
-    map["OkBuffer"] = OkBuffer::class
-    map["OkFilter"] = OkFilter::class
-    map["PositionObserver"] = PositionObserver::class
+fun parse(str: String, map: Map<String, KClass<*>>) : Any{
 
     val pattern = Pattern.compile("(\\w+)\\((.*?)\\)")
     val matcher = pattern.matcher(str)

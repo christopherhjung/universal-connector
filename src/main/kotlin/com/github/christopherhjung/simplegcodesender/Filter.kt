@@ -1,13 +1,17 @@
 package com.github.christopherhjung.simplegcodesender
 
-object NoFilter : FilterPart{
-    override fun filter(adapter: Adapter) {
+object NoFilter : FilterPart(){
+    override fun loop() {
         adapter.offer(adapter.take())
     }
 }
 
-interface FilterPart{
-    fun filter(adapter: Adapter)
+abstract class FilterPart{
+    protected lateinit var adapter: Adapter
+    abstract fun loop()
+    fun setup(adapter: Adapter){
+        this.adapter = adapter
+    }
 }
 
 interface Filter {

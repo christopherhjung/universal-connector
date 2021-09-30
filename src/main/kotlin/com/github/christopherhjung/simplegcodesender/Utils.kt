@@ -1,11 +1,7 @@
 package com.github.christopherhjung.simplegcodesender
 
-import kotlinx.coroutines.delay
 import java.io.BufferedReader
 import java.io.IOException
-import java.lang.RuntimeException
-import java.lang.Thread.sleep
-import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 object Utils {

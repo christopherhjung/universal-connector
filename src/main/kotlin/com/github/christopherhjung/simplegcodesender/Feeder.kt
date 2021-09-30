@@ -1,7 +1,6 @@
 package com.github.christopherhjung.simplegcodesender
 
 import java.io.BufferedReader
-import java.io.File
 import java.io.PrintWriter
 import java.util.concurrent.BlockingQueue
 import kotlin.concurrent.thread

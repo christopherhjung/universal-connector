@@ -1,7 +1,7 @@
 package com.github.christopherhjung.simplegcodesender
 
 import com.fazecast.jSerialComm.SerialPort
-import com.fazecast.jSerialComm.SerialPort.*
+import com.fazecast.jSerialComm.SerialPort.TIMEOUT_READ_BLOCKING
 import java.io.*
 import java.net.Socket
 import java.util.concurrent.LinkedBlockingQueue
