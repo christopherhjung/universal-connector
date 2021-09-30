@@ -1,6 +1,7 @@
 package com.github.christopherhjung.simplegcodesender
 
 import java.io.File
+import java.io.FileNotFoundException
 
 
 class FileLoader(dir: String = "./", pattern: String = "^!(.+)$" ) : Filter{
@@ -24,6 +25,10 @@ class FileLoadSuccessPart() : FilterPart(){
     fun success(fileName: String){
         adapter.offer("File $fileName loaded!")
     }
+
+    fun failure(fileName: String){
+        adapter.offer("File $fileName not found!")
+    }
 }
 
 class FileLoaderPart(val dir: String, val pattern: Regex, val success : FileLoadSuccessPart) : FilterPart(){
@@ -34,11 +39,15 @@ class FileLoaderPart(val dir: String, val pattern: Regex, val success : FileLoad
 
         if(result != null){
             val file = result.groupValues[1].trim()
-            val lines = File(dir, file).readLines()
-            for(fileLine in lines){
-                adapter.offer(fileLine)
+            try{
+                val lines = File(dir, file).readLines()
+                for(fileLine in lines){
+                    adapter.offer(fileLine)
+                }
+                success.success(file)
+            }catch (e: FileNotFoundException){
+                success.failure(file)
             }
-            success.success(file)
         }else{
             adapter.offer(line)
         }
