@@ -1,6 +1,7 @@
 package com.github.christopherhjung.simplegcodesender
 
 import java.io.BufferedReader
+import java.io.File
 import java.io.PrintWriter
 import java.util.concurrent.BlockingQueue
 import kotlin.concurrent.thread
@@ -17,6 +18,15 @@ class InputFeeder(connection: Connection, val queue: BlockingQueue<String>){
                 }
 
                 val line = Utils.interruptableReadLine(reader!!)
+
+                if(line.startsWith("!")){
+                    val file = line.drop(1).trim()
+                    val lines = File(file).readLines()
+                    for(fileLine in lines){
+                        queue.offer(fileLine)
+                    }
+                }
+
                 queue.offer(line)
             }catch (ignore: Exception){
                 if(closing){
