@@ -13,7 +13,7 @@ object Utils {
         val line: Pattern = Pattern.compile("^(.*)\\R")
         val result = StringBuilder()
         while(true) {
-           // if (reader.ready()){
+            try{
                 val chr = reader.read()
                 if (chr > -1){
                     result.append(chr.toChar())
@@ -26,9 +26,11 @@ object Utils {
                 if(matcher.matches()){
                     return matcher.group(1)
                 }
-            /*}else{
-                sleep(100)
-            }*/
+            }catch (e: IOException){
+                if(e.message != "Underlying input stream returned zero bytes"){
+                    throw e
+                }
+            }
         }
     }
 }

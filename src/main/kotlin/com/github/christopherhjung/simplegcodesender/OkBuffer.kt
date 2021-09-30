@@ -1,6 +1,7 @@
 package com.github.christopherhjung.simplegcodesender
 
 import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
 
 class OkBuffer() : Filter{
     val sem = Semaphore(1)
@@ -19,7 +20,7 @@ class OkBuffer() : Filter{
 
 class OkBlocker(val sem: Semaphore) : FilterPart{
     override fun filter(input: String): String {
-        sem.acquire()
+        sem.tryAcquire(20000, TimeUnit.MILLISECONDS)
         return input
     }
 }

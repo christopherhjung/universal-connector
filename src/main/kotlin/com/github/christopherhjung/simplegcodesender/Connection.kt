@@ -2,23 +2,12 @@ package com.github.christopherhjung.simplegcodesender
 
 import com.fazecast.jSerialComm.SerialPort
 import com.fazecast.jSerialComm.SerialPort.*
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
 import java.io.*
-import java.lang.RuntimeException
-import java.net.ServerSocket
 import java.net.Socket
-import java.net.SocketException
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.Semaphore
-import java.util.concurrent.TimeUnit
 import javax.net.ServerSocketFactory
 import javax.net.SocketFactory
-import kotlin.system.measureTimeMillis
 
 abstract class Connection{
     abstract val connected: Boolean
@@ -67,7 +56,7 @@ class StdOutConnection : Connection() {
 
 abstract class StreamConnection : Connection(){
     private val inputSemaphore = Semaphore(0)
-    private val outputSemaphore = Semaphore(0)
+    private val leaveSemaphore = Semaphore(0)
     private val enterSemaphore = Semaphore(0)
 
     abstract fun open()
@@ -78,14 +67,20 @@ abstract class StreamConnection : Connection(){
 
     override fun requestInputStream(): InputStream {
         if(start){
-            if(!inputSemaphore.tryAcquire(2000, TimeUnit.MILLISECONDS)){
-                output.interrupt()
-                inputSemaphore.acquire()
+            output.interrupt()
+            while(true){
+                try{
+                    inputSemaphore.acquire()
+                    break
+                }catch (e : InterruptedException){
+                    Thread.interrupted()
+                }
             }
             enterSemaphore.release()
-
+            Thread.interrupted()
+            //println("reconnect")
             open()
-            outputSemaphore.release()
+            leaveSemaphore.release()
         }
         return getInputStream()
     }
@@ -93,11 +88,17 @@ abstract class StreamConnection : Connection(){
     override fun requestOutputStream(): OutputStream {
         if(start){
             inputSemaphore.release()
-            if(!enterSemaphore.tryAcquire(2000, TimeUnit.MILLISECONDS)){
-                input.interrupt()
-                enterSemaphore.acquire()
+            input.interrupt()
+            while(true){
+                try{
+                    enterSemaphore.acquire()
+                    break
+                }catch (e : InterruptedException){
+                    Thread.interrupted()
+                }
             }
-            outputSemaphore.acquire()
+            Thread.interrupted()
+            leaveSemaphore.acquire()
         }
         return getOutputStream()
     }
@@ -131,15 +132,16 @@ class SerialConnection(val name: String) : StreamConnection(){
     override val connected: Boolean = port?.isOpen ?: false
 
     override fun open(){
+        port?.closePort()
         port = SerialPort.getCommPort(name).apply {
             baudRate = 115200
-            setComPortTimeouts( TIMEOUT_READ_BLOCKING, 1000000000,0)
+            setComPortTimeouts( TIMEOUT_READ_BLOCKING, 1000000000,1000000000)
             openPort()
         }
     }
 
     override fun getInputStream() : InputStream {
-        return port!!.inputStream
+        return port!!.inputStreamWithSuppressedTimeoutExceptions
     }
 
     override fun getOutputStream() : OutputStream {

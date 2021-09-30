@@ -10,7 +10,6 @@ class InputFeeder(connection: Connection, val queue: BlockingQueue<String>){
     private var reader: BufferedReader? = null
     var closing = false
     val thread = thread(false){
-
         while(true){
             try {
                 if(reader == null){
@@ -21,14 +20,12 @@ class InputFeeder(connection: Connection, val queue: BlockingQueue<String>){
                 queue.offer(line)
             }catch (ignore: Exception){
                 if(closing){
-                    ignore.printStackTrace()
                     break
                 }else{
                     reader = null
                 }
             }
         }
-
     }
 
     fun start(){
@@ -64,7 +61,6 @@ class OutputFeeder(connection: Connection, val queue: BlockingQueue<String>){
                 }
             }catch (ignore: Exception){
                 if(closing){
-                    ignore.printStackTrace()
                     break
                 }else{
                     writer = null
