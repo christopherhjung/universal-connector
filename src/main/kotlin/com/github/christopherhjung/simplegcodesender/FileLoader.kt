@@ -3,11 +3,11 @@ package com.github.christopherhjung.simplegcodesender
 import java.io.File
 
 
-class FileLoader(dir: String ) : Filter{
+class FileLoader(dir: String, pattern: String ) : Filter{
     private val success = FileLoadSuccessPart()
-    private val part = FileLoaderPart(dir, success)
+    private val part = FileLoaderPart(dir, pattern.toRegex(), success)
 
-    constructor() : this("./")
+    constructor() : this("./", "^!(.+)$")
 
     override fun forward(): FilterPart {
         return part
@@ -28,11 +28,14 @@ class FileLoadSuccessPart() : FilterPart(){
     }
 }
 
-class FileLoaderPart(val dir: String, val success : FileLoadSuccessPart) : FilterPart(){
+class FileLoaderPart(val dir: String, val pattern: Regex, val success : FileLoadSuccessPart) : FilterPart(){
     override fun loop() {
         val line = adapter.take()
-        if(line.startsWith("!")){
-            val file = line.drop(1).trim()
+
+        val result = pattern.matchEntire(line)
+
+        if(result != null){
+            val file = result.groupValues[1].trim()
             val lines = File(dir, file).readLines()
             for(fileLine in lines){
                 adapter.offer(fileLine)
