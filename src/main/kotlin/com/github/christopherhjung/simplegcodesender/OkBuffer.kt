@@ -24,9 +24,9 @@ class OkBuffer() : Transformer{
 class AbortWorker(private val abort: AtomicBoolean, private val abortWithProgram: AtomicBoolean) : Worker(){
     override fun loop() {
         val line = adapter.take()
-        if(line.contentEquals("a", true)){
+        if(line.contentEquals("!a", true)){
             abort.set(true)
-        }else if(line.contentEquals("ap", true)){
+        }else if(line.contentEquals("!ap", true)){
             abortWithProgram.set(true)
         }else{
             adapter.offer(line)

@@ -64,7 +64,7 @@ class GCodeWorker() : Worker(){
             return adapter.offer("M84")
         }
 
-        if(line.matches("[A-Z_-]{2}.*".toRegex())){
+        if(line.matches("([^A-Z]|[A-Z_-]{2}).*".toRegex())){
             return adapter.offer(line)
         }
 
@@ -78,10 +78,13 @@ class GCodeWorker() : Worker(){
                     offerWithChecksum(currentCommand)
                 }
                 currentCommand = part
-                lastCode = part
+
+                if(part.matches("G[013]".toRegex())){
+                    lastCode = part
+                }
             }else{
                 if(currentCommand.isEmpty()){
-                    if(line.matches("[XYZIJKF].+".toRegex())){
+                    if(line.matches("[XYZIJKF].*".toRegex())){
                         currentCommand = lastCode
                     }
                 }

@@ -1,1 +1,1 @@
-java -jar build/libs/simple-gcode-sender-0.0.1-SNAPSHOT.jar --first "StdInOutConnection()" --second "ClientConnection(192.168.178.59,5555)"  -f "FileLoader(/Users/chris/Fusion 360 CAM/nc/,!(.+))" -f "TimeLogging()" -f "OkFilter()"
+java -jar build/libs/simple-gcode-sender-0.0.1-SNAPSHOT.jar --first "StdInOutConnection()" --second "ClientConnection(192.168.178.59,5555)"  -f "FileLoader(/Users/chris/Fusion 360 CAM/nc/,/(.+))" -f "TimeLogging()" -f "OkFilter()"
