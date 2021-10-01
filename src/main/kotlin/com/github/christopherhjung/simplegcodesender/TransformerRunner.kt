@@ -4,8 +4,12 @@ import kotlin.concurrent.thread
 
 class TransformerRunner(val transformerGate: TransformerGate){
     private val thread = thread(false) {
-        while(true){
-            transformerGate.loop()
+        try{
+            while(true){
+                transformerGate.loop()
+            }
+        }catch (e: InterruptedException){
+
         }
     }
 
@@ -15,6 +19,5 @@ class TransformerRunner(val transformerGate: TransformerGate){
 
     fun stop(){
         thread.interrupt()
-        thread.join()
     }
 }

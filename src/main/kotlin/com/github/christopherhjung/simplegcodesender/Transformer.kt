@@ -1,6 +1,6 @@
 package com.github.christopherhjung.simplegcodesender
 
-object NoEffect : TransformerGate(){
+class NoEffect : TransformerGate(){
     override fun loop() {
         adapter.offer(adapter.take())
     }
@@ -16,11 +16,11 @@ abstract class TransformerGate{
 
 interface Transformer {
     fun forward() : TransformerGate{
-        return NoEffect
+        return NoEffect()
     }
 
     fun backward() : TransformerGate{
-        return NoEffect
+        return NoEffect()
     }
 }
 

@@ -4,7 +4,6 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
-import kotlinx.coroutines.runBlocking
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.regex.Pattern
@@ -26,7 +25,7 @@ class Hello : CliktCommand() {
         val filters = filters.toMutableList()
 
         if(filters.isEmpty()){
-            filters.add(NoEffect)
+            filters.add(NoEffect())
         }else repeat(filters.size - 1){
             queues.add(LinkedBlockingQueue())
         }
@@ -52,9 +51,11 @@ class Hello : CliktCommand() {
         map["GCodeFilter"] = GCodeTransformer::class
         map["Loopback"] = Loopback::class
         map["OkBuffer"] = OkBuffer::class
-        map["OkFilter"] = OkTransformer::class
+        map["OkFilter"] = OkFilter::class
         map["PositionObserver"] = PositionObserver::class
         map["FileLoader"] = FileLoader::class
+        map["BashConnection"] = BashConnection::class
+        map["NoFilter"] = NoFilter::class
         return map
     }
 
@@ -73,11 +74,11 @@ class Hello : CliktCommand() {
             val forward = mappedFilter.forward()
             val backward = mappedFilter.backward()
 
-            if(forward != NoEffect){
+            if(forward !is NoEffect){
                 forwardFilters.add(forward)
             }
 
-            if(backward != NoEffect){
+            if(backward !is NoEffect){
                 backwardFilters.add(backward)
             }
         }

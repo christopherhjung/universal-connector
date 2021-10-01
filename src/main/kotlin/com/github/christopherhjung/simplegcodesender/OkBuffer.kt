@@ -31,20 +31,21 @@ class OkOpener(val sem: Semaphore) : TransformerGate(){
     }
 }
 
-
-class OkTransformer() : Transformer{
-    private val part = OkTransformerGate()
-
-    override fun forward(): TransformerGate {
-        return NoEffect
+class NoFilter() : Transformer{
+    override fun backward(): TransformerGate {
+        return NoEffect()
     }
+}
+
+class OkFilter() : Transformer{
+    private val part = OkFilterGate()
 
     override fun backward(): TransformerGate {
         return part
     }
 }
 
-class OkTransformerGate() : TransformerGate(){
+class OkFilterGate() : TransformerGate(){
     var counter = 0
     var last = 0L
     override fun loop() {

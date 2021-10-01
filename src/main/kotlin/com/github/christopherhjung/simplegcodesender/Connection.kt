@@ -4,10 +4,12 @@ import com.fazecast.jSerialComm.SerialPort
 import com.fazecast.jSerialComm.SerialPort.TIMEOUT_READ_BLOCKING
 import java.io.*
 import java.net.Socket
+import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.Semaphore
 import javax.net.ServerSocketFactory
 import javax.net.SocketFactory
+
 
 abstract class Connection{
     abstract val connected: Boolean
@@ -190,4 +192,50 @@ class ClientConnection(val host: String, val port: Int) : StreamConnection(){
         socket?.close()
     }
 }
+
+
+class BashConnection() : StreamConnection(){
+    private var process: Process? = null
+    override val connected: Boolean = process?.isAlive ?: false
+
+    override fun open(){
+        process?.destroy()
+        val builder = ProcessBuilder()
+        process = builder.command("/bin/bash").start()
+    }
+
+    override fun getInputStream() : InputStream {
+        return process!!.inputStream
+    }
+
+    override fun getOutputStream() : OutputStream {
+        return process!!.outputStream
+    }
+
+    override fun close() {
+    }
+}
+
+fun main() {
+    var line: String
+    val scan = Scanner(System.`in`)
+
+    val process = Runtime.getRuntime().exec("/bin/bash")
+    val stdin = process.outputStream
+    val stdout = process.inputStream
+
+    val reader = BufferedReader(InputStreamReader(stdout))
+    val writer = BufferedWriter(OutputStreamWriter(stdin))
+
+    var input = scan.nextLine()
+    input += "\n"
+    writer.write(input)
+    writer.flush()
+
+    while (reader.readLine().also { line = it } != null) {
+        println("Stdout: $line")
+    }
+}
+
+
 
