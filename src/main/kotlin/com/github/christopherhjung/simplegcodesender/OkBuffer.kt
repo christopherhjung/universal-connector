@@ -45,22 +45,19 @@ class OkBlocker(private val sem: Semaphore, val abort: AtomicBoolean, val abortW
 
     override fun loop() {
         sem.tryAcquire(20000, TimeUnit.MILLISECONDS)
-        var withProgram = abortWithProgram.getAndSet(false)
+        val withProgram = abortWithProgram.getAndSet(false)
         if(abort.getAndSet(false) || withProgram){
             adapter.clear()
             while(true){
                 adapter.poll(1000) ?: break
             }
 
-            val currentAbort = System.currentTimeMillis()
-            if(currentAbort - lastProgramAbort > 2000){
-                lastProgramAbort = currentAbort
-            }else{
-                withProgram = false
-            }
-
             if(withProgram){
-                adapter.offerInput(abortCode)
+                val currentAbort = System.currentTimeMillis()
+                if(currentAbort - lastProgramAbort > 2000){
+                    adapter.offerInput(abortCode)
+                    lastProgramAbort = currentAbort
+                }
             }
         }
         adapter.offer(adapter.take())
