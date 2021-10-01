@@ -29,7 +29,7 @@ class GCodeTransformerGate() : TransformerGate(){
 
         line = line.uppercase()
 
-        if(line == "FIRMWARE_RESTART" || line == "R"){
+        if(line == "R"){
             return adapter.offer("FIRMWARE_RESTART")
         }
 
@@ -39,6 +39,10 @@ class GCodeTransformerGate() : TransformerGate(){
 
         if(line == "S"){
             return adapter.offer("M84")
+        }
+
+        if(!line.matches("\\w\\d.+".toRegex())){
+            return adapter.offer(line)
         }
 
         val parts = line.split(" +".toRegex())

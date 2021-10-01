@@ -20,13 +20,21 @@ class OkBuffer() : Transformer{
 }
 
 class OkBlocker(private val sem: Semaphore, val error: AtomicBoolean) : TransformerGate(){
+    val abortCode = listOf(
+        "G90",
+        "G0 Z10",
+        "G0 X0 Y0"
+    )
+
     override fun loop() {
         sem.tryAcquire(20000, TimeUnit.MILLISECONDS)
         if(error.getAndSet(false)){
             adapter.clear()
             while(true){
-                adapter.poll(1000) ?: return
+                adapter.poll(1000) ?: break
             }
+
+            adapter.offerInput(abortCode)
         }
         adapter.offer(adapter.take())
     }

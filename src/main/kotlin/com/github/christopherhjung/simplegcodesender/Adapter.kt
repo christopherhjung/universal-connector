@@ -22,4 +22,20 @@ class Adapter(
     fun offer(str: String){
         output.offer(str)
     }
+
+    fun offer(lines: List<String>){
+        for( line in lines ){
+            offer(line)
+        }
+    }
+
+    fun offerInput(str: String){
+        input.offer(str)
+    }
+
+    fun offerInput(lines: List<String>){
+        for( line in lines ){
+            offerInput(line)
+        }
+    }
 }
