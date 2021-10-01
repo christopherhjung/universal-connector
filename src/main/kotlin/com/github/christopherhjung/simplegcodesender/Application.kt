@@ -8,6 +8,7 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.regex.Pattern
 import kotlin.reflect.KClass
+import kotlin.system.exitProcess
 
 fun main(args: Array<String>) = Hello().main(args)
 
@@ -56,6 +57,7 @@ class Hello : CliktCommand() {
         map["FileLoader"] = FileLoader::class
         map["BashConnection"] = BashConnection::class
         map["NoFilter"] = NoFilter::class
+        map["TimeLogging"] = TimeLogging::class
         return map
     }
 
@@ -133,12 +135,17 @@ fun parse(str: String, map: Map<String, KClass<*>>) : Any{
         }
 
         val kclass = map[className]
-        for(constructor in kclass!!.constructors){
-            try{
-                return constructor.call(*objs.toTypedArray())
-            }catch (ignore:Exception){
-                ignore.printStackTrace()
+        if(kclass != null){
+            for(constructor in kclass.constructors){
+                try{
+                    return constructor.call(*objs.toTypedArray())
+                }catch (ignore:Exception){
+                    ignore.printStackTrace()
+                }
             }
+        }else{
+            println("$className could not be found!")
+            exitProcess(1)
         }
     }
 
