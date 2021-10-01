@@ -5,19 +5,19 @@ import java.io.FileNotFoundException
 
 
 class FileLoader(dir: String = "./", pattern: String = "^!(.+)$" ) : Transformer{
-    private val success = FileLoadSuccessGate()
-    private val part = FileLoaderGate(File(dir.replace("\\ ", " ")), pattern.toRegex(), success)
+    private val success = FileLoadSuccessWorker()
+    private val part = FileLoaderWorker(File(dir.replace("\\ ", " ")), pattern.toRegex(), success)
 
-    override fun forward(): TransformerGate {
-        return part
+    override fun createForwardWorker(): List<TransformerWorker> {
+        return listOf(part)
     }
 
-    override fun backward(): TransformerGate {
-        return success
+    override fun createBackwardWorker(): List<TransformerWorker> {
+        return listOf(success)
     }
 }
 
-class FileLoadSuccessGate() : TransformerGate(){
+class FileLoadSuccessWorker() : TransformerWorker(){
     override fun loop() {
         adapter.offer(adapter.take())
     }
@@ -27,7 +27,7 @@ class FileLoadSuccessGate() : TransformerGate(){
     }
 }
 
-class FileLoaderGate(val dir: File, val pattern: Regex, val success : FileLoadSuccessGate) : TransformerGate(){
+class FileLoaderWorker(val dir: File, val pattern: Regex, val success : FileLoadSuccessWorker) : TransformerWorker(){
     val map = mutableMapOf<Int, File>()
     override fun loop() {
         val line = adapter.take()

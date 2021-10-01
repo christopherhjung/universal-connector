@@ -1,13 +1,14 @@
 package com.github.christopherhjung.simplegcodesender
 
+import java.util.concurrent.LinkedBlockingQueue
+
 class GCodeFilter() : Transformer{
-    val part = GCodeTransformerGate()
-    override fun forward(): TransformerGate {
-        return part
+    override fun createForwardWorker(): List<TransformerWorker> {
+        return listOf(GCodeTransformerWorker())
     }
 }
 
-class GCodeTransformerGate() : TransformerGate(){
+class GCodeTransformerWorker() : TransformerWorker(){
     private var lastCode: String = "G0"
 
     private fun offerWithChecksum(cmd: String){

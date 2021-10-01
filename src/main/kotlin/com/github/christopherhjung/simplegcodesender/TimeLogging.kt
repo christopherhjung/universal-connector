@@ -1,19 +1,18 @@
 package com.github.christopherhjung.simplegcodesender
 
 import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 
 class TimeLogging() : Transformer{
-    val part = TimeLoggingGate()
-    override fun backward(): TransformerGate {
-        return part
+    val part = TimeLoggingWorker()
+
+    override fun createBackwardWorker(): List<TransformerWorker> {
+        return listOf(part)
     }
 }
 
-class TimeLoggingGate() : TransformerGate(){
+class TimeLoggingWorker() : TransformerWorker(){
     private var dateTimeFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSSX")
 
     private fun offerWithChecksum(cmd: String){

@@ -6,29 +6,41 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class OkBuffer() : Transformer{
     val sem = Semaphore(1)
-    val error = AtomicBoolean(false)
-    val blocker = OkBlocker(sem, error)
-    val opener = OkOpener(sem, error)
+    val abort = AtomicBoolean(false)
+    val blocker = OkBlocker(sem, abort)
+    val abortWorker = AbortWorker(abort)
+    val opener = OkOpener(sem, abort)
 
-    override fun forward(): TransformerGate {
-        return blocker
+    override fun createForwardWorker(): List<TransformerWorker> {
+        return listOf(abortWorker, blocker)
     }
 
-    override fun backward(): TransformerGate {
-        return opener
+    override fun createBackwardWorker(): List<TransformerWorker> {
+        return listOf(opener)
     }
 }
 
-class OkBlocker(private val sem: Semaphore, val error: AtomicBoolean) : TransformerGate(){
+class AbortWorker(private val abort: AtomicBoolean) : TransformerWorker(){
+    override fun loop() {
+        val line = adapter.take()
+        if(line.contentEquals("a", true)){
+            abort.set(true)
+        }else{
+            adapter.offer(line)
+        }
+    }
+}
+
+class OkBlocker(private val sem: Semaphore, val abort: AtomicBoolean) : TransformerWorker(){
     val abortCode = listOf(
         "G90",
         "G0 Z10",
-        "G0 X0 Y0"
+        "G0 Y0"
     )
 
     override fun loop() {
         sem.tryAcquire(20000, TimeUnit.MILLISECONDS)
-        if(error.getAndSet(false)){
+        if(abort.getAndSet(false)){
             adapter.clear()
             while(true){
                 adapter.poll(1000) ?: break
@@ -40,13 +52,13 @@ class OkBlocker(private val sem: Semaphore, val error: AtomicBoolean) : Transfor
     }
 }
 
-class OkOpener(private val sem: Semaphore, private val error: AtomicBoolean) : TransformerGate(){
+class OkOpener(private val sem: Semaphore, private val abort: AtomicBoolean) : TransformerWorker(){
     override fun loop() {
         val ok = adapter.take()
         if(ok == "ok"){
             sem.release()
         }else if(ok.startsWith("!!")){
-            error.set(true)
+            abort.set(true)
             sem.release()
         }
 
@@ -54,21 +66,16 @@ class OkOpener(private val sem: Semaphore, private val error: AtomicBoolean) : T
     }
 }
 
-class NoFilter() : Transformer{
-    override fun backward(): TransformerGate {
-        return NoEffect()
-    }
-}
 
 class OkFilter() : Transformer{
-    private val part = OkFilterGate()
+    private val part = OkFilterWorker()
 
-    override fun backward(): TransformerGate {
-        return part
+    override fun createBackwardWorker(): List<TransformerWorker> {
+        return listOf(part)
     }
 }
 
-class OkFilterGate() : TransformerGate(){
+class OkFilterWorker() : TransformerWorker(){
     var counter = 0
     var last = 0L
     override fun loop() {

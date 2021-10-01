@@ -4,9 +4,10 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.TimeUnit
 
 class Adapter(
-    private val input: BlockingQueue<String>,
-    private val output: BlockingQueue<String>
+    var input: BlockingQueue<String>,
+    var output: BlockingQueue<String>
 ){
+
     fun take() : String{
         return input.take()
     }

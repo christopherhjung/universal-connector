@@ -19,27 +19,27 @@ class Hello : CliktCommand() {
 
     val progresses = mutableListOf<TransformerRunner>()
 
-    private fun connect(input: BlockingQueue<String>, output: BlockingQueue<String>, filters: List<TransformerGate>){
-        val queues = mutableListOf<BlockingQueue<String>>()
-        queues.add(input)
+    private fun connect(input: BlockingQueue<String>, output: BlockingQueue<String>, transformers: List<Transformer>, forward: Boolean = true){
+        var currentAdapter = Adapter(input, LinkedBlockingQueue())
 
-        val filters = filters.toMutableList()
+        for(transformer in transformers){
+            val mapper = if(forward) {
+                transformer::forward
+            }else{
+                transformer::backward
+            }
 
-        if(filters.isEmpty()){
-            filters.add(NoEffect())
-        }else repeat(filters.size - 1){
-            queues.add(LinkedBlockingQueue())
+            currentAdapter = mapper(currentAdapter){
+                val progress = TransformerRunner(it)
+                progresses.add(progress)
+            }
         }
 
-        queues.add(output)
-
-        for(element in queues.zipWithNext().zip(filters)){
-            val (queue, filter) = element
-            val adapter = Adapter(queue.first, queue.second)
-            filter.setup(adapter)
-            val progress = TransformerRunner(filter)
-            progresses.add(progress)
-        }
+        currentAdapter.output = output
+        val closeLastAdapter = NoEffect()
+        closeLastAdapter.setup(currentAdapter)
+        val progress = TransformerRunner(closeLastAdapter)
+        progresses.add(progress)
     }
 
     private fun createClassMap() : Map<String, KClass<*>>{
@@ -56,7 +56,6 @@ class Hello : CliktCommand() {
         map["PositionObserver"] = PositionObserver::class
         map["FileLoader"] = FileLoader::class
         map["BashConnection"] = BashConnection::class
-        map["NoFilter"] = NoFilter::class
         map["TimeLogging"] = TimeLogging::class
         return map
     }
@@ -67,26 +66,15 @@ class Hello : CliktCommand() {
         val firstConnection = parse(first, map) as Connection
         val secondConnection = parse(second, map) as Connection
 
-        val forwardFilters = mutableListOf<TransformerGate>()
-        val backwardFilters = mutableListOf<TransformerGate>()
+
+        val transformers = mutableListOf<Transformer>()
 
         for( filter in filters ){
-            val mappedFilter = parse(filter, map) as Transformer
-
-            val forward = mappedFilter.forward()
-            val backward = mappedFilter.backward()
-
-            if(forward !is NoEffect){
-                forwardFilters.add(forward)
-            }
-
-            if(backward !is NoEffect){
-                backwardFilters.add(backward)
-            }
+            transformers.add(parse(filter, map) as Transformer)
         }
 
-        connect(firstConnection.input.queue, secondConnection.output.queue, forwardFilters)
-        connect(secondConnection.input.queue, firstConnection.output.queue, backwardFilters.reversed())
+        connect(firstConnection.input.queue, secondConnection.output.queue, transformers)
+        connect(secondConnection.input.queue, firstConnection.output.queue, transformers.reversed(), false)
 
         for(progress in progresses){
             progress.start()
