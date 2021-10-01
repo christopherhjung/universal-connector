@@ -7,9 +7,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 class OkBuffer() : Transformer{
     val sem = Semaphore(1)
     val abort = AtomicBoolean(false)
-    val blocker = OkBlocker(sem, abort)
-    val abortWorker = AbortWorker(abort)
-    val opener = OkOpener(sem, abort)
+    val abortWithProgram = AtomicBoolean(false)
+    val blocker = OkBlocker(sem, abort, abortWithProgram)
+    val abortWorker = AbortWorker(abort, abortWithProgram)
+    val opener = OkOpener(sem, abortWithProgram)
 
     override fun createForwardWorker(): List<TransformerWorker> {
         return listOf(abortWorker, blocker)
@@ -20,33 +21,47 @@ class OkBuffer() : Transformer{
     }
 }
 
-class AbortWorker(private val abort: AtomicBoolean) : TransformerWorker(){
+class AbortWorker(private val abort: AtomicBoolean, private val abortWithProgram: AtomicBoolean) : TransformerWorker(){
     override fun loop() {
         val line = adapter.take()
         if(line.contentEquals("a", true)){
             abort.set(true)
+        }else if(line.contentEquals("ap", true)){
+            abortWithProgram.set(true)
         }else{
             adapter.offer(line)
         }
     }
 }
 
-class OkBlocker(private val sem: Semaphore, val abort: AtomicBoolean) : TransformerWorker(){
-    val abortCode = listOf(
+class OkBlocker(private val sem: Semaphore, val abort: AtomicBoolean, val abortWithProgram: AtomicBoolean) : TransformerWorker(){
+    private val abortCode = listOf(
         "G90",
         "G0 Z10 F5000",
         "G0 Y0 F5000"
     )
 
+    var lastProgramAbort = 0L
+
     override fun loop() {
         sem.tryAcquire(20000, TimeUnit.MILLISECONDS)
-        if(abort.getAndSet(false)){
+        var withProgram = abortWithProgram.getAndSet(false)
+        if(abort.getAndSet(false) || withProgram){
             adapter.clear()
             while(true){
                 adapter.poll(1000) ?: break
             }
 
-            adapter.offerInput(abortCode)
+            val currentAbort = System.currentTimeMillis()
+            if(currentAbort - lastProgramAbort > 2000){
+                lastProgramAbort = currentAbort
+            }else{
+                withProgram = false
+            }
+
+            if(withProgram){
+                adapter.offerInput(abortCode)
+            }
         }
         adapter.offer(adapter.take())
     }
