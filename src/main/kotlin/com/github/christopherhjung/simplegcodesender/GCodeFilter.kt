@@ -1,6 +1,7 @@
 package com.github.christopherhjung.simplegcodesender
 
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.regex.Pattern
 
 class GCodeFilter() : Transformer{
     override fun createForwardWorker(): List<TransformerWorker> {
@@ -10,8 +11,32 @@ class GCodeFilter() : Transformer{
 
 class GCodeTransformerWorker() : TransformerWorker(){
     private var lastCode: String = "G0"
+    private var speedFinder = "F(\\d+)".toRegex()
+    private var g0Speed = 10000
+    private var g1Speed = 333
 
     private fun offerWithChecksum(cmd: String){
+        var cmd = cmd
+        val isG0 = cmd.startsWith("G0 ")
+        if(isG0 || cmd.startsWith("G1 ")){
+            val result = speedFinder.find(cmd)
+            if(result != null){
+                val speed = result.groupValues[1].toInt()
+
+                if(isG0){
+                    g0Speed = speed
+                }else{
+                    g1Speed = speed
+                }
+            }else{
+                cmd += " F" + if(isG0){
+                    g0Speed
+                }else{
+                    g1Speed
+                }
+            }
+        }
+
         if(!cmd.startsWith("G28") && !cmd.startsWith("M84")){
             adapter.offer("$cmd*${Checksum.xor(cmd)}")
         }
