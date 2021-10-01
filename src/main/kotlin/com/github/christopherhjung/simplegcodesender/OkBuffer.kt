@@ -2,11 +2,13 @@ package com.github.christopherhjung.simplegcodesender
 
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 class OkBuffer() : Transformer{
     val sem = Semaphore(1)
-    val blocker = OkBlocker(sem)
-    val opener = OkOpener(sem)
+    val error = AtomicBoolean(false)
+    val blocker = OkBlocker(sem, error)
+    val opener = OkOpener(sem, error)
 
     override fun forward(): TransformerGate {
         return blocker
@@ -17,17 +19,30 @@ class OkBuffer() : Transformer{
     }
 }
 
-class OkBlocker(val sem: Semaphore) : TransformerGate(){
+class OkBlocker(private val sem: Semaphore, val error: AtomicBoolean) : TransformerGate(){
     override fun loop() {
         sem.tryAcquire(20000, TimeUnit.MILLISECONDS)
+        if(error.getAndSet(false)){
+            adapter.clear()
+            while(true){
+                adapter.poll(1000) ?: return
+            }
+        }
         adapter.offer(adapter.take())
     }
 }
 
-class OkOpener(val sem: Semaphore) : TransformerGate(){
+class OkOpener(private val sem: Semaphore, private val error: AtomicBoolean) : TransformerGate(){
     override fun loop() {
-        sem.release()
-        adapter.offer(adapter.take())
+        val ok = adapter.take()
+        if(ok == "ok"){
+            sem.release()
+        }else if(ok.startsWith("!!")){
+            error.set(true)
+            sem.release()
+        }
+
+        adapter.offer(ok)
     }
 }
 

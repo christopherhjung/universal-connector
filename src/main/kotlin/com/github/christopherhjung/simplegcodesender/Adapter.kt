@@ -11,11 +11,15 @@ class Adapter(
         return input.take()
     }
 
-    fun offer(str: String){
-        output.offer(str)
+    fun clear(){
+        input.clear()
     }
 
     fun poll(millis: Long) : String?{
         return input.poll(millis, TimeUnit.MILLISECONDS)
+    }
+
+    fun offer(str: String){
+        output.offer(str)
     }
 }
