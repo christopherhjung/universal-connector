@@ -18,7 +18,7 @@ class GCodeTransformerWorker() : TransformerWorker(){
     private fun offerWithChecksum(cmd: String){
         var cmd = cmd
         val isG0 = cmd.startsWith("G0 ")
-        if(isG0 || cmd.startsWith("G1 ")){
+        if(isG0 || cmd.startsWith("G1 ") || cmd.startsWith("G3 ")){
             val result = speedFinder.find(cmd)
             if(result != null){
                 val speed = result.groupValues[1].toInt()
@@ -35,7 +35,7 @@ class GCodeTransformerWorker() : TransformerWorker(){
                     g1Speed
                 }
             }
-        }else if(!cmd.startsWith("G28") && !cmd.startsWith("M84")){
+        }else if(cmd.startsWith("G28") || cmd.startsWith("M84")){
             return
         }
 
