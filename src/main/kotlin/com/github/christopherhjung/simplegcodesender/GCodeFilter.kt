@@ -67,7 +67,7 @@ class GCodeTransformerWorker() : TransformerWorker(){
             return adapter.offer("M84")
         }
 
-        if(!line.matches("\\w[-+]?\\d.*".toRegex())){
+        if(line.matches("[A-Z_-]{2}.*".toRegex())){
             return adapter.offer(line)
         }
 
