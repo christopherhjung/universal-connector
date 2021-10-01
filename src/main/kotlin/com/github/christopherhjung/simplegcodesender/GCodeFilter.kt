@@ -11,7 +11,7 @@ class GCodeTransformerGate() : TransformerGate(){
     private var lastCode: String = "G0"
 
     private fun offerWithChecksum(cmd: String){
-        if(!cmd.startsWith("G28")){
+        if(!cmd.startsWith("G28") && !cmd.startsWith("M84")){
             adapter.offer("$cmd*${Checksum.xor(cmd)}")
         }
     }
