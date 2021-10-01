@@ -4,12 +4,12 @@ package com.github.christopherhjung.simplegcodesender
 class PositionObserver(time: Number) : Transformer{
     private val part = PositionObserverWorker(time.toLong())
 
-    override fun createForwardWorker(): List<TransformerWorker> {
+    override fun createForwardWorker(): List<Worker> {
         return listOf(part)
     }
 }
 
-class PositionObserverWorker(val delay: Long) : TransformerWorker(){
+class PositionObserverWorker(val delay: Long) : Worker(){
     var last = System.currentTimeMillis()
 
     override fun loop() {

@@ -7,12 +7,12 @@ import java.util.*
 class TimeLogging() : Transformer{
     val part = TimeLoggingWorker()
 
-    override fun createBackwardWorker(): List<TransformerWorker> {
+    override fun createBackwardWorker(): List<Worker> {
         return listOf(part)
     }
 }
 
-class TimeLoggingWorker() : TransformerWorker(){
+class TimeLoggingWorker() : Worker(){
     private var dateTimeFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSSX")
 
     private fun offerWithChecksum(cmd: String){

@@ -2,13 +2,13 @@ package com.github.christopherhjung.simplegcodesender
 
 import java.util.concurrent.LinkedBlockingQueue
 
-class NoEffect : TransformerWorker(){
+class NoEffect : Worker(){
     override fun loop() {
         adapter.offer(adapter.take())
     }
 }
 
-abstract class TransformerWorker{
+abstract class Worker{
     protected lateinit var adapter: Adapter
     abstract fun loop()
     fun setup(adapter: Adapter){
@@ -17,7 +17,7 @@ abstract class TransformerWorker{
 }
 
 interface Transformer {
-    fun connect(workers: List<TransformerWorker>, adapter: Adapter, block: (TransformerWorker) -> Unit): Adapter {
+    fun connect(workers: List<Worker>, adapter: Adapter, block: (Worker) -> Unit): Adapter {
         var currentAdapter = adapter
         for(worker in workers){
             block(worker)
@@ -28,17 +28,17 @@ interface Transformer {
         return currentAdapter
     }
 
-    fun createForwardWorker() : List<TransformerWorker>{
+    fun createForwardWorker() : List<Worker>{
         return listOf()
     }
-    fun createBackwardWorker() : List<TransformerWorker>{
+    fun createBackwardWorker() : List<Worker>{
         return listOf()
     }
 
-    fun forward(adapter: Adapter, block: (TransformerWorker) -> Unit ) : Adapter{
+    fun forward(adapter: Adapter, block: (Worker) -> Unit ) : Adapter{
         return connect(createForwardWorker(), adapter, block)
     }
-    fun backward(adapter: Adapter, block: (TransformerWorker) -> Unit ) : Adapter{
+    fun backward(adapter: Adapter, block: (Worker) -> Unit ) : Adapter{
         return connect(createBackwardWorker(), adapter, block)
     }
 }

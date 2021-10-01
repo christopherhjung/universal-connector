@@ -1,15 +1,12 @@
 package com.github.christopherhjung.simplegcodesender
 
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.regex.Pattern
-
 class GCodeFilter() : Transformer{
-    override fun createForwardWorker(): List<TransformerWorker> {
-        return listOf(GCodeTransformerWorker())
+    override fun createForwardWorker(): List<Worker> {
+        return listOf(GCodeWorker())
     }
 }
 
-class GCodeTransformerWorker() : TransformerWorker(){
+class GCodeWorker() : Worker(){
     private var lastCode: String = "G0"
     private var speedFinder = "F(\\d+)".toRegex()
     private var g0Speed = 10000

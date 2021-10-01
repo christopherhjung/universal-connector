@@ -12,16 +12,16 @@ class OkBuffer() : Transformer{
     val abortWorker = AbortWorker(abort, abortWithProgram)
     val opener = OkOpener(sem, abortWithProgram)
 
-    override fun createForwardWorker(): List<TransformerWorker> {
+    override fun createForwardWorker(): List<Worker> {
         return listOf(abortWorker, blocker)
     }
 
-    override fun createBackwardWorker(): List<TransformerWorker> {
+    override fun createBackwardWorker(): List<Worker> {
         return listOf(opener)
     }
 }
 
-class AbortWorker(private val abort: AtomicBoolean, private val abortWithProgram: AtomicBoolean) : TransformerWorker(){
+class AbortWorker(private val abort: AtomicBoolean, private val abortWithProgram: AtomicBoolean) : Worker(){
     override fun loop() {
         val line = adapter.take()
         if(line.contentEquals("a", true)){
@@ -34,7 +34,7 @@ class AbortWorker(private val abort: AtomicBoolean, private val abortWithProgram
     }
 }
 
-class OkBlocker(private val sem: Semaphore, val abort: AtomicBoolean, val abortWithProgram: AtomicBoolean) : TransformerWorker(){
+class OkBlocker(private val sem: Semaphore, val abort: AtomicBoolean, val abortWithProgram: AtomicBoolean) : Worker(){
     private val abortCode = listOf(
         "G90",
         "G0 Z10 F5000",
@@ -64,7 +64,7 @@ class OkBlocker(private val sem: Semaphore, val abort: AtomicBoolean, val abortW
     }
 }
 
-class OkOpener(private val sem: Semaphore, private val abort: AtomicBoolean) : TransformerWorker(){
+class OkOpener(private val sem: Semaphore, private val abort: AtomicBoolean) : Worker(){
     override fun loop() {
         val ok = adapter.take()
         if(ok == "ok"){
@@ -82,12 +82,12 @@ class OkOpener(private val sem: Semaphore, private val abort: AtomicBoolean) : T
 class OkFilter() : Transformer{
     private val part = OkFilterWorker()
 
-    override fun createBackwardWorker(): List<TransformerWorker> {
+    override fun createBackwardWorker(): List<Worker> {
         return listOf(part)
     }
 }
 
-class OkFilterWorker() : TransformerWorker(){
+class OkFilterWorker() : Worker(){
     var counter = 0
     var last = 0L
     override fun loop() {

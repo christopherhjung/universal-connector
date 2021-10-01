@@ -2,11 +2,11 @@ package com.github.christopherhjung.simplegcodesender
 
 import kotlin.concurrent.thread
 
-class TransformerRunner(val transformerWorker: TransformerWorker){
+class TransformerRunner(val worker: Worker){
     private val thread = thread(false) {
         try{
             while(true){
-                transformerWorker.loop()
+                worker.loop()
             }
         }catch (e: InterruptedException){
 

@@ -8,16 +8,16 @@ class FileLoader(dir: String = "./", pattern: String = "^!(.+)$" ) : Transformer
     private val success = FileLoadSuccessWorker()
     private val part = FileLoaderWorker(File(dir.replace("\\ ", " ")), pattern.toRegex(), success)
 
-    override fun createForwardWorker(): List<TransformerWorker> {
+    override fun createForwardWorker(): List<Worker> {
         return listOf(part)
     }
 
-    override fun createBackwardWorker(): List<TransformerWorker> {
+    override fun createBackwardWorker(): List<Worker> {
         return listOf(success)
     }
 }
 
-class FileLoadSuccessWorker() : TransformerWorker(){
+class FileLoadSuccessWorker() : Worker(){
     override fun loop() {
         adapter.offer(adapter.take())
     }
@@ -27,7 +27,7 @@ class FileLoadSuccessWorker() : TransformerWorker(){
     }
 }
 
-class FileLoaderWorker(val dir: File, val pattern: Regex, val success : FileLoadSuccessWorker) : TransformerWorker(){
+class FileLoaderWorker(val dir: File, val pattern: Regex, val success : FileLoadSuccessWorker) : Worker(){
     val map = mutableMapOf<Int, File>()
     override fun loop() {
         val line = adapter.take()
