@@ -34,8 +34,8 @@ class AbortWorker(private val abort: AtomicBoolean) : TransformerWorker(){
 class OkBlocker(private val sem: Semaphore, val abort: AtomicBoolean) : TransformerWorker(){
     val abortCode = listOf(
         "G90",
-        "G0 Z10",
-        "G0 Y0"
+        "G0 Z10 F5000",
+        "G0 Y0 F5000"
     )
 
     override fun loop() {
