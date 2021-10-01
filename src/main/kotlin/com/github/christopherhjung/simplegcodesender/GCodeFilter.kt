@@ -35,11 +35,11 @@ class GCodeTransformerWorker() : TransformerWorker(){
                     g1Speed
                 }
             }
+        }else if(!cmd.startsWith("G28") && !cmd.startsWith("M84")){
+            return
         }
 
-        if(!cmd.startsWith("G28") && !cmd.startsWith("M84")){
-            adapter.offer("$cmd*${Checksum.xor(cmd)}")
-        }
+        adapter.offer("$cmd*${Checksum.xor(cmd)}")
     }
 
     override fun loop() {
