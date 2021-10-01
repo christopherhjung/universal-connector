@@ -215,27 +215,3 @@ class BashConnection() : StreamConnection(){
     override fun close() {
     }
 }
-
-fun main() {
-    var line: String
-    val scan = Scanner(System.`in`)
-
-    val process = Runtime.getRuntime().exec("/bin/bash")
-    val stdin = process.outputStream
-    val stdout = process.inputStream
-
-    val reader = BufferedReader(InputStreamReader(stdout))
-    val writer = BufferedWriter(OutputStreamWriter(stdin))
-
-    var input = scan.nextLine()
-    input += "\n"
-    writer.write(input)
-    writer.flush()
-
-    while (reader.readLine().also { line = it } != null) {
-        println("Stdout: $line")
-    }
-}
-
-
-

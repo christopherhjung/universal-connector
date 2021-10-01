@@ -48,7 +48,7 @@ class Hello : CliktCommand() {
         map["StdInOutConnection"] = StdInOutConnection::class
         map["StdOutConnection"] = StdOutConnection::class
         map["SerialConnection"] = SerialConnection::class
-        map["GCodeFilter"] = GCodeTransformer::class
+        map["GCodeFilter"] = GCodeFilter::class
         map["Loopback"] = Loopback::class
         map["OkBuffer"] = OkBuffer::class
         map["OkFilter"] = OkFilter::class
@@ -115,7 +115,7 @@ fun parse(str: String, map: Map<String, KClass<*>>) : Any{
             .group(1)
 
         val arguments = matcher
-            .group(2).replace(" +".toRegex(), "")
+            .group(2)
 
         val splitArguments = arguments.split(",")
 
@@ -123,6 +123,7 @@ fun parse(str: String, map: Map<String, KClass<*>>) : Any{
 
         if(arguments.isNotBlank()){
             for(argument in splitArguments){
+                val argument = argument.trim()
                 if(argument.matches("\\d+".toRegex())){
                     objs.add(argument.toInt())
                 }else{

@@ -6,7 +6,7 @@ import java.io.FileNotFoundException
 
 class FileLoader(dir: String = "./", pattern: String = "^!(.+)$" ) : Transformer{
     private val success = FileLoadSuccessGate()
-    private val part = FileLoaderGate(dir, pattern.toRegex(), success)
+    private val part = FileLoaderGate(File(dir.replace("\\ ", " ")), pattern.toRegex(), success)
 
     override fun forward(): TransformerGate {
         return part
@@ -22,31 +22,49 @@ class FileLoadSuccessGate() : TransformerGate(){
         adapter.offer(adapter.take())
     }
 
-    fun success(fileName: String){
-        adapter.offer("File $fileName loaded!")
-    }
-
-    fun failure(fileName: String){
-        adapter.offer("File $fileName not found!")
+    fun send(msg: String){
+        adapter.offer(msg)
     }
 }
 
-class FileLoaderGate(val dir: String, val pattern: Regex, val success : FileLoadSuccessGate) : TransformerGate(){
+class FileLoaderGate(val dir: File, val pattern: Regex, val success : FileLoadSuccessGate) : TransformerGate(){
+    val map = mutableMapOf<Int, File>()
     override fun loop() {
         val line = adapter.take()
 
         val result = pattern.matchEntire(line)
 
         if(result != null){
-            val file = result.groupValues[1].trim()
-            try{
-                val lines = File(dir, file).readLines()
-                for(fileLine in lines){
-                    adapter.offer(fileLine)
+            val fileName = result.groupValues[1].trim()
+            if(fileName == "ls"){
+                var i = 0
+                map.clear()
+                dir.walkTopDown().forEach {
+                    if(it.isFile){
+                        map[i] = it
+                        val path = it.relativeTo(dir).path
+                        success.send("($i) $path")
+                        i++
+                    }
                 }
-                success.success(file)
-            }catch (e: FileNotFoundException){
-                success.failure(file)
+            }else{
+                val number = fileName.toIntOrNull()
+
+                val file = if(number != null){
+                    map[number] ?: return adapter.offer("File $number not listed!")
+                }else{
+                    File(dir, fileName)
+                }
+
+                try{
+                    val lines = file.readLines()
+                    for(fileLine in lines){
+                        adapter.offer(fileLine)
+                    }
+                    success.send("File $file loaded!")
+                }catch (e: FileNotFoundException){
+                    success.send("File $file not found!")
+                }
             }
         }else{
             adapter.offer(line)
