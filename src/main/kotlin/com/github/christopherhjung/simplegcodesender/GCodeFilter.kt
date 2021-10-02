@@ -6,7 +6,21 @@ class GCodeFilter() : Transformer{
     }
 }
 
-class GCodeWorker() : Worker(){
+object GCode{
+    fun checksum(cmd: String): Int {
+        var checksum = 0
+        for (data in cmd.toByteArray()) {
+            checksum = checksum xor data.toInt()
+        }
+        return checksum
+    }
+
+    fun withChecksum(cmd: String) : String{
+        return "$cmd*${checksum(cmd)}"
+    }
+}
+
+class GCodeWorker(private val speedMemory : Boolean = true) : Worker(){
     private var lastCode: String = "G0"
     private var speedFinder = "F(\\d+)".toRegex()
     private var g0Speed = 10000
@@ -15,7 +29,7 @@ class GCodeWorker() : Worker(){
     private fun offerWithChecksum(cmd: String){
         var cmd = cmd
         val isG0 = cmd.startsWith("G0 ")
-        if(isG0 || cmd.startsWith("G1 ") || cmd.startsWith("G3 ")){
+        if(speedMemory && ( isG0 || cmd.startsWith("G1 ") || cmd.startsWith("G2 ") || cmd.startsWith("G3 ") )){
             val result = speedFinder.find(cmd)
             if(result != null){
                 val speed = result.groupValues[1].toInt()
@@ -36,7 +50,7 @@ class GCodeWorker() : Worker(){
             return
         }
 
-        adapter.offer("$cmd*${Checksum.xor(cmd)}")
+        adapter.offer(GCode.withChecksum(cmd))
     }
 
     override fun loop() {
@@ -64,7 +78,7 @@ class GCodeWorker() : Worker(){
             return adapter.offer("M84")
         }
 
-        if(line.matches("([^A-Z]|[A-Z_-]{2}).*".toRegex())){
+        if(line.matches("([^A-Z]|[A-Z_]{2}).*".toRegex())){
             return adapter.offer(line)
         }
 
@@ -79,7 +93,7 @@ class GCodeWorker() : Worker(){
                 }
                 currentCommand = part
 
-                if(part.matches("G[013]".toRegex())){
+                if(part.matches("G[0123]".toRegex())){
                     lastCode = part
                 }
             }else{

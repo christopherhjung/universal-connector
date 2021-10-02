@@ -15,12 +15,6 @@ class TimeLogging() : Transformer{
 class TimeLoggingWorker() : Worker(){
     private var dateTimeFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSSX")
 
-    private fun offerWithChecksum(cmd: String){
-        if(!cmd.startsWith("G28")){
-            adapter.offer("$cmd*${Checksum.xor(cmd)}")
-        }
-    }
-
     override fun loop() {
         val line = adapter.take()
         val time = dateTimeFormatter.format(Date())

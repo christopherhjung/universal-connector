@@ -59,8 +59,9 @@ class OkBlocker(private val sem: Semaphore, val abort: AtomicBoolean, val abortW
                     lastProgramAbort = currentAbort
                 }
             }
+        }else{
+            adapter.offer(adapter.take())
         }
-        adapter.offer(adapter.take())
     }
 }
 
