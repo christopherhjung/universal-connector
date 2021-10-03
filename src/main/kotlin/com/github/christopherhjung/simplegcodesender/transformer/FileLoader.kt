@@ -28,7 +28,32 @@ class Notifier() : Worker(){
 }
 
 class FileLoaderWorker(val dir: File, val pattern: Regex, val notify : Notifier) : Worker(){
-    var fileList = listOf<File>()
+    var fileList: List<File>? = null
+    fun getOrLoadFileList() : List<File>{
+        val fileList = this.fileList
+        if(fileList != null){
+            return fileList
+        }
+
+        return loadFileList()
+    }
+
+    fun loadFileList() : List<File>{
+        val fileList = mutableListOf<File>()
+        dir.walkTopDown().forEach {
+            if(it.isFile){
+                fileList.add(it)
+            }
+        }
+        fileList.sortBy { it.path }
+        for( (i, file) in fileList.withIndex() ){
+            val path = file.relativeTo(dir).path
+            notify.send("($i) $path")
+        }
+        this.fileList = fileList
+        return fileList
+    }
+
     override fun loop() {
         val line = adapter.take()
         val result = pattern.matchEntire(line)
@@ -36,23 +61,12 @@ class FileLoaderWorker(val dir: File, val pattern: Regex, val notify : Notifier)
         if(result != null){
             val fileName = result.groupValues[1].trim()
             if(fileName == "ls"){
-                val fileList = mutableListOf<File>()
-                dir.walkTopDown().forEach {
-                    if(it.isFile){
-                        fileList.add(it)
-                    }
-                }
-                fileList.sortBy { it.path }
-                for( (i, file) in fileList.withIndex() ){
-                    val path = file.relativeTo(dir).path
-                    notify.send("($i) $path")
-                }
-                this.fileList = fileList
+                loadFileList()
             }else{
                 val number = fileName.toIntOrNull()
 
                 val file = if(number != null){
-                    val fileList = fileList
+                    val fileList = getOrLoadFileList()
                     if(number >= 0 && number < fileList.size){
                         fileList[number]
                     }else{
