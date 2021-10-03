@@ -26,7 +26,7 @@ class RuntimeTest {
         Starter.start(first)
 
         for( i in 0 until 100 ){
-            val random = RandomStringUtils.random(128)
+            val random = RandomStringUtils.randomAlphabetic(128)
             writer.println(random)
             val line = reader.readLine()
             assertEquals(random, line)
