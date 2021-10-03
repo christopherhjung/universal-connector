@@ -35,7 +35,8 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.1")
 
     implementation(kotlin("scripting-jsr223"))
-    implementation("commons-codec:commons-codec:1.15")
+    //implementation("commons-codec:commons-codec:1.15")
+    testImplementation("org.apache.commons:commons-lang3:3.12.0")
 }
 
 tasks.withType<KotlinCompile> {
