@@ -23,21 +23,18 @@ tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    implementation("org.springframework:spring-websocket:5.3.9")
-    implementation("org.springframework:spring-messaging:5.3.9")
+    //implementation("org.springframework.boot:spring-boot-starter-web")
+    //implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    //implementation("org.jetbrains.kotlin:kotlin-reflect")
+    //implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("com.github.ajalt.clikt:clikt:3.2.0")
     implementation("com.fazecast:jSerialComm:2.7.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    //implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
+    //testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.1")
 
     implementation(kotlin("scripting-jsr223"))
-
     implementation("commons-codec:commons-codec:1.15")
 }
 

@@ -28,7 +28,6 @@ abstract class StreamConnection : Connection(){
             }
             enterSemaphore.release()
             Thread.interrupted()
-            //println("reconnect")
             open()
             leaveSemaphore.release()
         }
