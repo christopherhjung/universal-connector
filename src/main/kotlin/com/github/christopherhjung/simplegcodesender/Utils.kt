@@ -5,8 +5,8 @@ import java.io.IOException
 import java.util.regex.Pattern
 
 object Utils {
+    private  val pattern = Pattern.compile("^(.*)\\R")
     fun interruptableReadLine(reader: BufferedReader): String {
-        val line: Pattern = Pattern.compile("^(.*)\\R")
         val result = StringBuilder()
         while(true) {
             try{
@@ -17,7 +17,7 @@ object Utils {
                     throw RuntimeException("end of stream")
                 }
 
-                val matcher = line.matcher(result.toString())
+                val matcher = pattern.matcher(result)
                 if (Thread.interrupted()) throw InterruptedException()
                 if(matcher.matches()){
                     return matcher.group(1)
