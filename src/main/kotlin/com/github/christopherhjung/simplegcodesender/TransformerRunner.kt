@@ -1,5 +1,6 @@
 package com.github.christopherhjung.simplegcodesender
 
+import com.github.christopherhjung.simplegcodesender.transformer.Worker
 import kotlin.concurrent.thread
 
 class TransformerRunner(val worker: Worker){

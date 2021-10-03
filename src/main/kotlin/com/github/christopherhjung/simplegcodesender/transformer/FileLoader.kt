@@ -1,4 +1,4 @@
-package com.github.christopherhjung.simplegcodesender
+package com.github.christopherhjung.simplegcodesender.transformer
 
 import java.io.File
 import java.io.FileNotFoundException

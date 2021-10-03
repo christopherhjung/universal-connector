@@ -1,5 +1,7 @@
 package com.github.christopherhjung.simplegcodesender
 
+import com.github.christopherhjung.simplegcodesender.transformer.GCode
+import com.github.christopherhjung.simplegcodesender.transformer.GCodeWorker
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 import java.util.concurrent.LinkedBlockingQueue

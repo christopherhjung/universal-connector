@@ -1,7 +1,8 @@
-package com.github.christopherhjung.simplegcodesender
+package com.github.christopherhjung.simplegcodesender.transformer
 
 
-class PositionObserver(time: Number) : Transformer{
+
+class PositionObserver(time: Number) : Transformer {
     private val part = PositionObserverWorker(time.toLong())
 
     override fun createForwardWorker(): List<Worker> {

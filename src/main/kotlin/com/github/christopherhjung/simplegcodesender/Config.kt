@@ -1,5 +1,10 @@
 package com.github.christopherhjung.simplegcodesender
 
+import com.github.christopherhjung.simplegcodesender.connection.Connection
+import com.github.christopherhjung.simplegcodesender.connection.Loopback
+import com.github.christopherhjung.simplegcodesender.connection.StdInOut
+import com.github.christopherhjung.simplegcodesender.transformer.GCodeFilter
+import com.github.christopherhjung.simplegcodesender.transformer.Transformer
 import org.apache.commons.codec.digest.DigestUtils
 import java.io.*
 
@@ -11,7 +16,11 @@ class Config(val input: Connection, val output: Connection, val transformers: Li
     var hash: String = ""
 
     companion object{
-        private const val defaultImports = "import com.github.christopherhjung.simplegcodesender.*"
+        private val defaultImports = listOf(
+            "import com.github.christopherhjung.simplegcodesender.*",
+            "import com.github.christopherhjung.simplegcodesender.connection.*",
+            "import com.github.christopherhjung.simplegcodesender.transformer.*",
+        )
         fun fromFile(file: File) : Config?{
             val configStr = file.readText()
             val hash = DigestUtils.sha256Hex(configStr)
@@ -29,7 +38,7 @@ class Config(val input: Connection, val output: Connection, val transformers: Li
             }*/
 
             try{
-                val config = Executor.execute("$defaultImports\n$configStr") as Config?
+                val config = Executor.execute("${defaultImports.joinToString("\n")}\n$configStr") as Config?
 
                 if(config != null){
                     config.hash = hash

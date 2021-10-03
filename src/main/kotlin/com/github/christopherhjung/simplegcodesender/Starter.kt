@@ -1,5 +1,7 @@
 package com.github.christopherhjung.simplegcodesender
 
+import com.github.christopherhjung.simplegcodesender.transformer.NoEffect
+import com.github.christopherhjung.simplegcodesender.transformer.Transformer
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 

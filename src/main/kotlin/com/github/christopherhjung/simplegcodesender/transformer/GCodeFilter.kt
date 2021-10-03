@@ -1,6 +1,6 @@
-package com.github.christopherhjung.simplegcodesender
+package com.github.christopherhjung.simplegcodesender.transformer
 
-class GCodeFilter() : Transformer{
+class GCodeFilter() : Transformer {
     override fun createForwardWorker(): List<Worker> {
         return listOf(GCodeWorker())
     }

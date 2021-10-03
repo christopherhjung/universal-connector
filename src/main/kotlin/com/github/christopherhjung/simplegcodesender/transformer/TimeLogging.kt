@@ -1,10 +1,10 @@
-package com.github.christopherhjung.simplegcodesender
+package com.github.christopherhjung.simplegcodesender.transformer
 
 import java.text.SimpleDateFormat
 import java.util.*
 
 
-class TimeLogging() : Transformer{
+class TimeLogging() : Transformer {
     val part = TimeLoggingWorker()
 
     override fun createBackwardWorker(): List<Worker> {

@@ -1,5 +1,6 @@
 package com.github.christopherhjung.simplegcodesender
 
+import com.github.christopherhjung.simplegcodesender.connection.Connection
 import java.io.BufferedReader
 import java.io.PrintWriter
 import java.util.concurrent.BlockingQueue

@@ -1,6 +1,7 @@
 package com.github.christopherhjung.simplegcodesender
 
-import javax.script.*
+import javax.script.ScriptEngine
+import javax.script.ScriptEngineManager
 
 class Executor {
     companion object {

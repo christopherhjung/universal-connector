@@ -4,6 +4,8 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
+import com.github.christopherhjung.simplegcodesender.connection.*
+import com.github.christopherhjung.simplegcodesender.transformer.*
 import java.io.File
 import java.util.regex.Pattern
 import kotlin.reflect.KClass

@@ -1,5 +1,6 @@
-package com.github.christopherhjung.simplegcodesender
+package com.github.christopherhjung.simplegcodesender.transformer
 
+import com.github.christopherhjung.simplegcodesender.Adapter
 import java.util.concurrent.LinkedBlockingQueue
 
 class NoEffect : Worker(){

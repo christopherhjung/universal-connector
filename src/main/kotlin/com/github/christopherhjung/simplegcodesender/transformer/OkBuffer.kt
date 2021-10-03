@@ -1,10 +1,10 @@
-package com.github.christopherhjung.simplegcodesender
+package com.github.christopherhjung.simplegcodesender.transformer
 
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
-class OkBuffer() : Transformer{
+class OkBuffer() : Transformer {
     val sem = Semaphore(1)
     val abort = AtomicBoolean(false)
     val abortWithProgram = AtomicBoolean(false)
