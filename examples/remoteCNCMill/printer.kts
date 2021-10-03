@@ -1,7 +1,7 @@
 
 config{
     input = Server(5555)
-    output = Serial("/tmp/printer")
+    output = Loopback()
     add(GCodeFilter())
     add(GCodeControl())
 }
