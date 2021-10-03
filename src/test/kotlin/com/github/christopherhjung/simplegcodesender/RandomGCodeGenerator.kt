@@ -3,7 +3,7 @@ package com.github.christopherhjung.simplegcodesender
 import kotlin.random.Random
 
 class RandomGCodeGenerator {
-    val random = Random(2222)
+    private val random = Random(2222)
 
     fun Double.format(digits: Int) = "%.${digits}f".format(this)
 
