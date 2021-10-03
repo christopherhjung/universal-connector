@@ -83,11 +83,11 @@ fun parse(str: String, map: Map<String, KClass<*>>) : Any{
 
         if(arguments.isNotBlank()){
             for(argument in splitArguments){
-                val argument = argument.trim()
-                if(argument.matches("\\d+".toRegex())){
-                    objs.add(argument.toInt())
+                val trimedArgument = argument.trim()
+                if(trimedArgument.matches("\\d+".toRegex())){
+                    objs.add(trimedArgument.toInt())
                 }else{
-                    objs.add(argument)
+                    objs.add(trimedArgument)
                 }
             }
         }

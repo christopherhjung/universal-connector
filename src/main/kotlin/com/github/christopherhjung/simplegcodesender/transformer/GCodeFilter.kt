@@ -26,8 +26,8 @@ class GCodeWorker(private val speedMemory : Boolean = true) : Worker(){
     private var g0Speed = 10000
     private var g1Speed = 333
 
-    private fun offerWithChecksum(cmd: String){
-        var cmd = cmd
+    private fun offerWithChecksum(withoutChecksum: String){
+        var cmd = withoutChecksum
         val isG0 = cmd.startsWith("G0 ")
         if(speedMemory && ( isG0 || cmd.startsWith("G1 ") || cmd.startsWith("G2 ") || cmd.startsWith("G3 ") )){
             val result = speedFinder.find(cmd)
