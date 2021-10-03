@@ -6,8 +6,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class OkBuffer() : Transformer {
     val sem = Semaphore(1)
-    val blocker = OkBlocker(sem)
-    val abortWorker = AbortWorker(blocker)
+    val lock = AtomicBoolean(false)
+    val blocker = OkBlocker(sem, lock)
+    val notifier = Notifier()
+    val abortWorker = AbortWorker(blocker, notifier, lock)
     val opener = OkOpener(sem, blocker)
 
     override fun createForwardWorker(): List<Worker> {
@@ -15,24 +17,30 @@ class OkBuffer() : Transformer {
     }
 
     override fun createBackwardWorker(): List<Worker> {
-        return listOf(opener)
+        return listOf(opener, notifier)
     }
 }
 
-class AbortWorker(private val blocker: OkBlocker) : Worker(){
+class AbortWorker(private val blocker: OkBlocker, private val notifier:Notifier, private val lock :AtomicBoolean) : Worker(){
     override fun loop() {
         val line = adapter.take()
         if(line.contentEquals("!a", true)){
+            lock.set(true)
             blocker.abort(false)
         }else if(line.contentEquals("!ap", true)){
+            lock.set(true)
             blocker.abort(true)
-        }else{
+        }else if(line.contentEquals("!u", true)){
+            if(lock.getAndSet(false)){
+                notifier.send("Unlocked!")
+            }
+        }else if(!lock.get()){
             adapter.offer(line)
         }
     }
 }
 
-class OkBlocker(private val sem: Semaphore) : Worker(){
+class OkBlocker(private val sem: Semaphore, private val lock :AtomicBoolean) : Worker(){
     private val abortCode = listOf(
         "G90",
         "G0 Z10 F10000",
@@ -42,6 +50,7 @@ class OkBlocker(private val sem: Semaphore) : Worker(){
     private var lastProgramAbort = 0L
 
     fun abort(withProgram: Boolean){
+        lock.set(true)
         adapter.clear()
 
         if(withProgram){

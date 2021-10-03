@@ -5,7 +5,7 @@ import java.io.FileNotFoundException
 
 
 class FileLoader(dir: String = "./", pattern: String = "^/(.+)$" ) : Transformer{
-    private val notify = FileLoadSuccessWorker()
+    private val notify = Notifier()
     private val part = FileLoaderWorker(File(dir.replace("\\ ", " ")), pattern.toRegex(), notify)
 
     override fun createForwardWorker(): List<Worker> {
@@ -17,7 +17,7 @@ class FileLoader(dir: String = "./", pattern: String = "^/(.+)$" ) : Transformer
     }
 }
 
-class FileLoadSuccessWorker() : Worker(){
+class Notifier() : Worker(){
     override fun loop() {
         adapter.offer(adapter.take())
     }
@@ -27,7 +27,7 @@ class FileLoadSuccessWorker() : Worker(){
     }
 }
 
-class FileLoaderWorker(val dir: File, val pattern: Regex, val notify : FileLoadSuccessWorker) : Worker(){
+class FileLoaderWorker(val dir: File, val pattern: Regex, val notify : Notifier) : Worker(){
     var fileList = listOf<File>()
     override fun loop() {
         val line = adapter.take()
