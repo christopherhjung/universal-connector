@@ -4,7 +4,7 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
-class OkBuffer() : Transformer {
+class GCodeControl() : Transformer {
     val sem = Semaphore(1)
     val lock = AtomicBoolean(false)
     val blocker = OkBlocker(sem, lock)
@@ -22,6 +22,7 @@ class OkBuffer() : Transformer {
 }
 
 class AbortWorker(private val blocker: OkBlocker, private val notifier:Notifier, private val lock :AtomicBoolean) : Worker(){
+    private var lastNotified = 0L
     override fun loop() {
         val line = adapter.take()
         if(line.contentEquals("!a", true)){
@@ -36,6 +37,12 @@ class AbortWorker(private val blocker: OkBlocker, private val notifier:Notifier,
             }
         }else if(!lock.get()){
             adapter.offer(line)
+        }else{
+            val currentTime = System.currentTimeMillis()
+            if(currentTime - lastNotified > 1000){
+                notifier.send("Locked!")
+                lastNotified = currentTime
+            }
         }
     }
 }

@@ -4,5 +4,5 @@ config{
     //output = Serial("/tmp/printer")
     output = StdInOut()
     add(GCodeFilter())
-    add(OkBuffer())
+    add(GCodeControl())
 }
