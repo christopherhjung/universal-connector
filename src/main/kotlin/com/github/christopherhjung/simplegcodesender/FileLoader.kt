@@ -4,7 +4,7 @@ import java.io.File
 import java.io.FileNotFoundException
 
 
-class FileLoader(dir: String = "./", pattern: String = "^!(.+)$" ) : Transformer{
+class FileLoader(dir: String = "./", pattern: String = "^/(.+)$" ) : Transformer{
     private val notify = FileLoadSuccessWorker()
     private val part = FileLoaderWorker(File(dir.replace("\\ ", " ")), pattern.toRegex(), notify)
 
