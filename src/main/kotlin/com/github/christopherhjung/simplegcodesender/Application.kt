@@ -1,7 +1,6 @@
 package com.github.christopherhjung.simplegcodesender
 
 import com.github.ajalt.clikt.core.CliktCommand
-import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
@@ -32,18 +31,18 @@ class Cli : CliktCommand(name="cli") {
 
     private fun createClassMap() : Map<String, KClass<*>>{
         val map = mutableMapOf<String, KClass<*>>()
-        map["ClientConnection"] = ClientConnection::class
-        map["ServerConnection"] = ServerConnection::class
-        map["StdInOutConnection"] = StdInOutConnection::class
-        map["StdOutConnection"] = StdOutConnection::class
-        map["SerialConnection"] = SerialConnection::class
+        map["ClientConnection"] = Client::class
+        map["ServerConnection"] = Server::class
+        map["StdInOutConnection"] = StdInOut::class
+        map["StdOutConnection"] = StdOut::class
+        map["SerialConnection"] = Serial::class
         map["GCodeFilter"] = GCodeFilter::class
         map["Loopback"] = Loopback::class
         map["OkBuffer"] = OkBuffer::class
         map["OkFilter"] = OkFilter::class
         map["PositionObserver"] = PositionObserver::class
         map["FileLoader"] = FileLoader::class
-        map["BashConnection"] = BashConnection::class
+        map["BashConnection"] = Bash::class
         map["TimeLogging"] = TimeLogging::class
         return map
     }

@@ -6,7 +6,7 @@ class ParserTest {
         println(result)
 
         config{
-            input = StdInOutConnection()
+            input = StdInOut()
             output = Loopback()
             add(GCodeFilter())
         }

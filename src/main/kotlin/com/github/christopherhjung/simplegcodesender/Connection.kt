@@ -32,7 +32,7 @@ abstract class Connection{
     }
 }
 
-class StdInOutConnection : Connection() {
+class StdInOut : Connection() {
     override val connected: Boolean = true
 
     override fun requestInputStream(): InputStream {
@@ -44,7 +44,7 @@ class StdInOutConnection : Connection() {
     }
 }
 
-class StdOutConnection : Connection() {
+class StdOut : Connection() {
     override val connected: Boolean = true
 
     override fun requestInputStream(): InputStream {
@@ -106,7 +106,7 @@ abstract class StreamConnection : Connection(){
     }
 }
 
-class ServerConnection(port: Int) : StreamConnection(){
+class Server(port: Int) : StreamConnection(){
     private val server = ServerSocketFactory.getDefault().createServerSocket(port)
     private var socket: Socket? = null
     override val connected: Boolean = socket?.isConnected ?: false
@@ -129,7 +129,7 @@ class ServerConnection(port: Int) : StreamConnection(){
     }
 }
 
-class SerialConnection(val name: String) : StreamConnection(){
+class Serial(val name: String) : StreamConnection(){
     private var port: SerialPort? = null
     override val connected: Boolean = port?.isOpen ?: false
 
@@ -172,7 +172,7 @@ class Loopback : StreamConnection(){
     }
 }
 
-class ClientConnection(val host: String, val port: Int) : StreamConnection(){
+class Client(val host: String, val port: Int) : StreamConnection(){
     private var socket: Socket? = null
     override val connected: Boolean = socket?.isConnected ?: false
 
@@ -194,7 +194,7 @@ class ClientConnection(val host: String, val port: Int) : StreamConnection(){
 }
 
 
-class BashConnection() : StreamConnection(){
+class Bash() : StreamConnection(){
     private var process: Process? = null
     override val connected: Boolean = process?.isAlive ?: false
 

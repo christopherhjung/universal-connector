@@ -68,7 +68,7 @@ fun config(block: ConfigScope.() -> Unit ) : Config{
 
 fun test(){
     config{
-        input = StdInOutConnection()
+        input = StdInOut()
         output = Loopback()
         add(GCodeFilter())
     }
