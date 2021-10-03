@@ -46,10 +46,6 @@ class FileLoaderWorker(val dir: File, val pattern: Regex, val notify : Notifier)
             }
         }
         fileList.sortBy { it.path }
-        for( (i, file) in fileList.withIndex() ){
-            val path = file.relativeTo(dir).path
-            notify.send("($i) $path")
-        }
         this.fileList = fileList
         return fileList
     }
@@ -61,7 +57,11 @@ class FileLoaderWorker(val dir: File, val pattern: Regex, val notify : Notifier)
         if(result != null){
             val fileName = result.groupValues[1].trim()
             if(fileName == "ls"){
-                loadFileList()
+                val fileList = loadFileList()
+                for( (i, file) in fileList.withIndex() ){
+                    val path = file.relativeTo(dir).path
+                    notify.send("($i) $path")
+                }
             }else{
                 val number = fileName.toIntOrNull()
 
