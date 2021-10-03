@@ -7,28 +7,24 @@ import java.util.concurrent.BlockingQueue
 import kotlin.concurrent.thread
 
 
-class InputFeeder(connection: Connection, val queue: BlockingQueue<String>){
-    private var reader: BufferedReader? = null
+abstract class Feeder<T>{
+    protected var context: T? = null
     var closing = false
-    val thread = thread(false){
+    val thread = thread(false) {
         while(true){
             try {
-                if(reader == null){
-                    reader = connection.requestInputStream().bufferedReader()
-                }
-
-                val line = Utils.interruptableReadLine(reader!!)
-
-                queue.offer(line)
+                impl()
             }catch (ignore: Exception){
                 if(closing){
                     break
                 }else{
-                    reader = null
+                    context = null
                 }
             }
         }
     }
+
+    abstract fun impl()
 
     fun start(){
         thread.start()
@@ -44,43 +40,30 @@ class InputFeeder(connection: Connection, val queue: BlockingQueue<String>){
     }
 }
 
-class OutputFeeder(connection: Connection, val queue: BlockingQueue<String>){
-    private var writer: PrintWriter? = null
-    var closing = false
-    val thread = thread(false) {
-        while(true){
-            try {
-                if(writer == null || writer?.checkError() == null){
-                    writer = PrintWriter(connection.requestOutputStream())
-                }
-
-                val value = queue.take()
-
-                with(writer!!){
-                    write(value)
-                    write('\n'.code)
-                    flush()
-                }
-            }catch (ignore: Exception){
-                if(closing){
-                    break
-                }else{
-                    writer = null
-                }
-            }
+class InputFeeder(val connection: Connection, val queue: BlockingQueue<String>) : Feeder<BufferedReader>(){
+    override fun impl() {
+        if(context == null){
+            context = connection.requestInputStream().bufferedReader()
         }
-    }
 
-    fun start(){
-        thread.start()
-    }
+        val line = Utils.interruptableReadLine(context!!)
 
-    fun interrupt(){
-        thread.interrupt()
+        queue.offer(line)
     }
+}
 
-    fun stop(){
-        closing = true
-        interrupt()
+class OutputFeeder(val connection: Connection, val queue: BlockingQueue<String>) : Feeder<PrintWriter>(){
+    override fun impl() {
+        if(context == null || context?.checkError() == null){
+            context = PrintWriter(connection.requestOutputStream())
+        }
+
+        val value = queue.take()
+
+        with(context!!){
+            write(value)
+            write('\n'.code)
+            flush()
+        }
     }
 }
