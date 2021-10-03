@@ -7,7 +7,7 @@ class ConfigCache(){
     val cache: MutableMap<String, Config> = mutableMapOf()
 }
 
-class Config(val first: Connection, val second: Connection, val transformers: List<Transformer>){
+class Config(val input: Connection, val output: Connection, val transformers: List<Transformer>){
     var hash: String = ""
 
     companion object{
@@ -51,8 +51,8 @@ class Config(val first: Connection, val second: Connection, val transformers: Li
     }
 }
 class ConfigScope{
-    lateinit var first: Connection
-    lateinit var second: Connection
+    lateinit var input: Connection
+    lateinit var output: Connection
     val transformers = mutableListOf<Transformer>()
 
     fun add(transformer: Transformer){
@@ -63,13 +63,13 @@ class ConfigScope{
 fun config(block: ConfigScope.() -> Unit ) : Config{
     val scope = ConfigScope()
     scope.block()
-    return Config(scope.first, scope.second, scope.transformers)
+    return Config(scope.input, scope.output, scope.transformers)
 }
 
 fun test(){
     config{
-        first = StdInOutConnection()
-        second = Loopback()
+        input = StdInOutConnection()
+        output = Loopback()
         add(GCodeFilter())
     }
 }

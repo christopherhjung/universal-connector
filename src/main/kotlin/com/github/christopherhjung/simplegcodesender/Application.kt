@@ -13,7 +13,7 @@ import kotlin.system.exitProcess
 fun main(args: Array<String>) = Kts()/*.subcommands(Cli())*/.main(args)
 
 class Kts : CliktCommand(name="kts") {
-     val file: String by option("-f", help="File").required()
+    val file: String by option("-f", help="File").required()
 
     override fun run() {
         val config = Config.fromFile(File(file))

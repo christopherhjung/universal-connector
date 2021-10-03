@@ -38,8 +38,8 @@ class Starter {
 
 
     fun start(config: Config){
-        val first = config.first
-        val second = config.second
+        val first = config.input
+        val second = config.output
         val transformers = config.transformers
 
         connect(first.input.queue, second.output.queue, transformers)
