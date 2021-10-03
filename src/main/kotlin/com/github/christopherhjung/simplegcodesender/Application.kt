@@ -50,9 +50,6 @@ class Cli : CliktCommand(name="cli") {
     }
 
     override fun run() {
-        val result  = Executor.execute("import com.github.christopherhjung.simplegcodesender.*\nTimeLogging()")
-        println(result)
-
         val map = createClassMap()
 
         val firstConnection = parse(first, map) as Connection

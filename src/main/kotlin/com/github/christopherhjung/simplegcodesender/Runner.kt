@@ -3,7 +3,7 @@ package com.github.christopherhjung.simplegcodesender
 import com.github.christopherhjung.simplegcodesender.transformer.Worker
 import kotlin.concurrent.thread
 
-class Runner(val worker: Worker){
+class Runner(private val worker: Worker){
     private val thread = thread(false) {
         try{
             while(true){
