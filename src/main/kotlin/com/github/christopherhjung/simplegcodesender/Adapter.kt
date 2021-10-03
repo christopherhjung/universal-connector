@@ -7,13 +7,18 @@ class Adapter(
     var input: BlockingQueue<String>,
     var output: BlockingQueue<String>
 ){
-
     fun take() : String{
         return input.take()
     }
 
     fun clear(){
         input.clear()
+    }
+
+    fun clear(time : Long){
+        while(true){
+            poll(time) ?: return
+        }
     }
 
     fun poll(millis: Long) : String?{

@@ -6,11 +6,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class OkBuffer() : Transformer {
     val sem = Semaphore(1)
-    val abort = AtomicBoolean(false)
-    val abortWithProgram = AtomicBoolean(false)
-    val blocker = OkBlocker(sem, abort, abortWithProgram)
-    val abortWorker = AbortWorker(abort, abortWithProgram)
-    val opener = OkOpener(sem, abortWithProgram)
+    val blocker = OkBlocker(sem)
+    val abortWorker = AbortWorker(blocker)
+    val opener = OkOpener(sem, blocker)
 
     override fun createForwardWorker(): List<Worker> {
         return listOf(abortWorker, blocker)
@@ -21,58 +19,53 @@ class OkBuffer() : Transformer {
     }
 }
 
-class AbortWorker(private val abort: AtomicBoolean, private val abortWithProgram: AtomicBoolean) : Worker(){
+class AbortWorker(private val blocker: OkBlocker) : Worker(){
     override fun loop() {
         val line = adapter.take()
         if(line.contentEquals("!a", true)){
-            abort.set(true)
+            blocker.abort(false)
         }else if(line.contentEquals("!ap", true)){
-            abortWithProgram.set(true)
+            blocker.abort(true)
         }else{
             adapter.offer(line)
         }
     }
 }
 
-class OkBlocker(private val sem: Semaphore, val abort: AtomicBoolean, val abortWithProgram: AtomicBoolean) : Worker(){
+class OkBlocker(private val sem: Semaphore) : Worker(){
     private val abortCode = listOf(
         "G90",
-        "G0 Z10 F5000",
-        "G0 Y0 F5000"
+        "G0 Z10 F10000",
+        "G0 Y0 F10000"
     )
 
-    var lastProgramAbort = 0L
+    private var lastProgramAbort = 0L
+
+    fun abort(withProgram: Boolean){
+        adapter.clear()
+
+        if(withProgram){
+            val currentAbort = System.currentTimeMillis()
+            if(currentAbort - lastProgramAbort > 2000){
+                adapter.offerInput(abortCode)
+                lastProgramAbort = currentAbort
+            }
+        }
+    }
 
     override fun loop() {
         sem.tryAcquire(20000, TimeUnit.MILLISECONDS)
-        val withProgram = abortWithProgram.getAndSet(false)
-        if(abort.getAndSet(false) || withProgram){
-            adapter.clear()
-            while(true){
-                adapter.poll(1000) ?: break
-            }
-
-            if(withProgram){
-                val currentAbort = System.currentTimeMillis()
-                if(currentAbort - lastProgramAbort > 2000){
-                    adapter.offerInput(abortCode)
-                    lastProgramAbort = currentAbort
-                }
-            }
-        }else{
-            adapter.offer(adapter.take())
-        }
+        adapter.offer(adapter.take())
     }
 }
 
-class OkOpener(private val sem: Semaphore, private val abort: AtomicBoolean) : Worker(){
+class OkOpener(private val sem: Semaphore, private val blocker: OkBlocker) : Worker(){
     override fun loop() {
         val ok = adapter.take()
         if(ok == "ok"){
             sem.release()
         }else if(ok.startsWith("!!")){
-            abort.set(true)
-            sem.release()
+            blocker.abort(true)
         }
 
         adapter.offer(ok)
