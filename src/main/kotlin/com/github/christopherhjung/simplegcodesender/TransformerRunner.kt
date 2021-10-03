@@ -10,7 +10,7 @@ class TransformerRunner(val worker: Worker){
                 worker.loop()
             }
         }catch (e: InterruptedException){
-
+            e.printStackTrace()
         }
     }
 
