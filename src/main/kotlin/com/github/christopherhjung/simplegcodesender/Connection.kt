@@ -48,7 +48,7 @@ class StdOut : Connection() {
     override val connected: Boolean = true
 
     override fun requestInputStream(): InputStream {
-        return ByteArrayInputStream("".toByteArray())
+        return InputStream.nullInputStream()
     }
 
     override fun requestOutputStream(): OutputStream {
