@@ -18,6 +18,10 @@ repositories {
     mavenCentral()
 }
 
+tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
+    requiresUnpack("**/kotlin-compiler-*.jar")
+}
+
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -31,9 +35,11 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.1")
+
+    implementation(kotlin("scripting-jsr223"))
+
+    implementation("commons-codec:commons-codec:1.15")
 }
-
-
 
 tasks.withType<KotlinCompile> {
     kotlinOptions {

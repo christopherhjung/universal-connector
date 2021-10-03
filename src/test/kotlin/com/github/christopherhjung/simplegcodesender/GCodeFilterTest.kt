@@ -36,7 +36,6 @@ class GCodeFilterTest {
 
         val actualOutputContent =  process(inputContent)
 
-
         assertEquals(expectedOutputContent, actualOutputContent)
     }
 
@@ -67,10 +66,14 @@ class GCodeFilterTest {
         val inputContent = listOf(
             "!a",
             "!ap",
-            GCode.withChecksum("m114")
+            "m114"
         )
 
-        val expectedOutput = inputContent.map { it.uppercase() }
+        val expectedOutput = listOf(
+            "!A",
+            "!AP",
+            GCode.withChecksum("M114")
+        )
 
         val actualOutputContent =  process(inputContent)
         assertEquals(expectedOutput, actualOutputContent)

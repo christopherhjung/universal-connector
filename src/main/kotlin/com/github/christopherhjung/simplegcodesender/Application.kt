@@ -1,46 +1,34 @@
 package com.github.christopherhjung.simplegcodesender
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
-import java.util.concurrent.BlockingQueue
-import java.util.concurrent.LinkedBlockingQueue
+import java.io.File
 import java.util.regex.Pattern
 import kotlin.reflect.KClass
 import kotlin.system.exitProcess
 
-fun main(args: Array<String>) = Hello().main(args)
+fun main(args: Array<String>) = Kts()/*.subcommands(Cli())*/.main(args)
 
-class Hello : CliktCommand() {
-    val first: String by option("--first", help="First connection").required()
-    val second: String by option("--second", help="Second connection").required()
-    val filters: List<String> by option("-f", help="Forward filters").multiple()
+class Kts : CliktCommand(name="kts") {
+     val file: String by option("-f", help="File").required()
 
-    val progresses = mutableListOf<TransformerRunner>()
-
-    private fun connect(input: BlockingQueue<String>, output: BlockingQueue<String>, transformers: List<Transformer>, forward: Boolean = true){
-        var currentAdapter = Adapter(input, LinkedBlockingQueue())
-
-        for(transformer in transformers){
-            val mapper = if(forward) {
-                transformer::forward
-            }else{
-                transformer::backward
-            }
-
-            currentAdapter = mapper(currentAdapter){
-                val progress = TransformerRunner(it)
-                progresses.add(progress)
-            }
+    override fun run() {
+        val config = Config.fromFile(File(file))
+        if(config == null){
+            println("File could not be loaded")
+            return
         }
-
-        currentAdapter.output = output
-        val closeLastAdapter = NoEffect()
-        closeLastAdapter.setup(currentAdapter)
-        val progress = TransformerRunner(closeLastAdapter)
-        progresses.add(progress)
+        Starter.start(config)
     }
+}
+
+class Cli : CliktCommand(name="cli") {
+    private val first: String by option("--first", help="First connection").required()
+    private val second: String by option("--second", help="Second connection").required()
+    private val filters: List<String> by option("--filter", help="Forward filters").multiple()
 
     private fun createClassMap() : Map<String, KClass<*>>{
         val map = mutableMapOf<String, KClass<*>>()
@@ -61,11 +49,13 @@ class Hello : CliktCommand() {
     }
 
     override fun run() {
+        val result  = Executor.execute("import com.github.christopherhjung.simplegcodesender.*\nTimeLogging()")
+        println(result)
+
         val map = createClassMap()
 
         val firstConnection = parse(first, map) as Connection
         val secondConnection = parse(second, map) as Connection
-
 
         val transformers = mutableListOf<Transformer>()
 
@@ -73,26 +63,8 @@ class Hello : CliktCommand() {
             transformers.add(parse(filter, map) as Transformer)
         }
 
-        connect(firstConnection.input.queue, secondConnection.output.queue, transformers)
-        connect(secondConnection.input.queue, firstConnection.output.queue, transformers.reversed(), false)
-
-        for(progress in progresses){
-            progress.start()
-        }
-
-        firstConnection.start()
-        secondConnection.start()
-
-        Runtime.getRuntime().addShutdownHook(object : Thread() {
-            override fun run() {
-                for(progress in progresses){
-                    progress.stop()
-                }
-
-                firstConnection.stop()
-                secondConnection.stop()
-            }
-        })
+        val config = Config(firstConnection, secondConnection, transformers)
+        Starter.start(config)
     }
 }
 
