@@ -8,7 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue
 
 class GCodeFilterTest {
 
-    fun process(inputContent: List<String>, speedMemory:Boolean = true) : List<String>{
+    private fun process(inputContent: List<String>, speedMemory:Boolean = true) : List<String>{
         val gcodeWorker = GCodeWorker(speedMemory=speedMemory)
 
         val input = LinkedBlockingQueue<String>()
