@@ -7,7 +7,7 @@ import java.util.concurrent.LinkedBlockingQueue
 
 class Starter {
 
-    val progresses = mutableListOf<TransformerRunner>()
+    val progresses = mutableListOf<Runner>()
 
     companion object{
         fun start(config: Config){
@@ -26,7 +26,7 @@ class Starter {
             }
 
             currentAdapter = mapper(currentAdapter){
-                val progress = TransformerRunner(it)
+                val progress = Runner(it)
                 progresses.add(progress)
             }
         }
@@ -34,7 +34,7 @@ class Starter {
         currentAdapter.output = output
         val closeLastAdapter = NoEffect()
         closeLastAdapter.setup(currentAdapter)
-        val progress = TransformerRunner(closeLastAdapter)
+        val progress = Runner(closeLastAdapter)
         progresses.add(progress)
     }
 
