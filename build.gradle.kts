@@ -6,7 +6,7 @@ plugins {
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     kotlin("jvm") version "1.5.31"
     kotlin("plugin.spring") version "1.5.31"
-    //id("org.springframework.experimental.aot") version "0.10.3"
+    `maven-publish`
 }
 
 group = "com.github.christopherhjung"
@@ -16,6 +16,17 @@ java.sourceCompatibility = JavaVersion.VERSION_1_8
 repositories {
     maven { url = uri("https://repo.spring.io/release") }
     mavenCentral()
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
 }
 
 tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {

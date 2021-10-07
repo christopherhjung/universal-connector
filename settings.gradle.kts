@@ -4,4 +4,4 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-rootProject.name = "simple-gcode-sender"
+rootProject.name = "universal-connector"

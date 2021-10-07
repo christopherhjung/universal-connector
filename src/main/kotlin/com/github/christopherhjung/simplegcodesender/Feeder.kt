@@ -1,30 +1,29 @@
 package com.github.christopherhjung.simplegcodesender
 
 import com.github.christopherhjung.simplegcodesender.connection.Connection
-import java.io.BufferedReader
-import java.io.PrintWriter
+import java.io.*
 import java.util.concurrent.BlockingQueue
 import kotlin.concurrent.thread
 
 
 abstract class Feeder<T>{
-    protected var context: T? = null
     var closing = false
     val thread = thread(false) {
         while(true){
             try {
-                impl()
+                loop()
             }catch (ignore: Exception){
                 if(closing){
                     break
                 }else{
-                    context = null
+                    reset()
                 }
             }
         }
     }
 
-    abstract fun impl()
+    abstract fun reset()
+    abstract fun loop()
 
     fun start(){
         thread.start()
@@ -40,27 +39,84 @@ abstract class Feeder<T>{
     }
 }
 
-class InputFeeder(val connection: Connection, val queue: BlockingQueue<String>) : Feeder<BufferedReader>(){
-    override fun impl() {
-        if(context == null){
-            context = connection.requestInputStream().bufferedReader()
+abstract class InputFeeder<T>(val connection: Connection, val queue: BlockingQueue<T>, val context: FeederContext<T>) : Feeder<Reader>()
+abstract class OutputFeeder<T>(val connection: Connection, val queue: BlockingQueue<T>, val context: FeederContext<T>) : Feeder<Writer>()
+
+open class FrameInputFeeder(connection: Connection, queue: BlockingQueue<ByteArray>, context: FeederContext<ByteArray>) : InputFeeder<ByteArray>(connection, queue, context){
+    private var inputStream: BufferedInputStream? = null
+
+    override fun reset() {
+        inputStream = null
+    }
+
+    override fun loop() {
+        if(inputStream == null){
+            inputStream = connection.requestInputStream(context).buffered()
         }
 
-        val line = Utils.interruptableReadLine(context!!)
+        inputStream?.apply {
+            val length = read()
+            val bytes = readNBytes(length)
+            queue.offer(bytes)
+        }
+    }
+}
+
+class FrameOutputFeeder( connection: Connection, queue: BlockingQueue<ByteArray>, context: FeederContext<ByteArray> ) : OutputFeeder<ByteArray>(connection, queue, context){
+    private var outputStream: BufferedOutputStream? = null
+
+    override fun reset() {
+        outputStream = null
+    }
+
+    override fun loop() {
+        if(outputStream == null ){
+            outputStream = connection.requestOutputStream(context).buffered()
+        }
+
+        val value = queue.take()
+
+        outputStream?.apply{
+            write(value.size)
+            write(value)
+        }
+    }
+}
+
+
+class LineInputFeeder( connection: Connection, queue: BlockingQueue<String>, context: FeederContext<String>) : InputFeeder<String>(connection, queue, context){
+    private var reader: BufferedReader? = null
+
+    override fun reset() {
+        reader = null
+    }
+
+    override fun loop() {
+        if(reader == null){
+            reader = connection.requestInputStream(context).bufferedReader()
+        }
+
+        val line = Utils.interruptableReadLine(reader!!)
 
         queue.offer(line)
     }
 }
 
-class OutputFeeder(val connection: Connection, val queue: BlockingQueue<String>) : Feeder<PrintWriter>(){
-    override fun impl() {
-        if(context == null || context?.checkError() == null){
-            context = PrintWriter(connection.requestOutputStream())
+class LineOutputFeeder( connection: Connection, queue: BlockingQueue<String>, context: FeederContext<String>) : OutputFeeder<String>(connection, queue, context){
+    private var writer: PrintWriter? = null
+
+    override fun reset() {
+        writer = null
+    }
+
+    override fun loop() {
+        if(writer == null || writer?.checkError() == null){
+            writer = PrintWriter(connection.requestOutputStream(context))
         }
 
         val value = queue.take()
 
-        with(context!!){
+        with(writer!!){
             write(value)
             write('\n'.code)
             flush()

@@ -1,5 +1,6 @@
 package com.github.christopherhjung.simplegcodesender
 
+import com.github.christopherhjung.simplegcodesender.connection.Serial
 import com.github.christopherhjung.simplegcodesender.transformer.NoEffect
 import com.github.christopherhjung.simplegcodesender.transformer.Transformer
 import java.util.concurrent.BlockingQueue
@@ -44,15 +45,21 @@ class Starter {
         val second = config.output
         val transformers = config.transformers
 
-        connect(first.input.queue, second.output.queue, transformers)
-        connect(second.input.queue, first.output.queue, transformers.reversed(), false)
+        val inputFeederFactory = LineFeederFactory()
+        val outputFeederFactory = LineFeederFactory()
+
+        val inputFeeder = inputFeederFactory.createFeeder(first)
+        val outputFeeder = outputFeederFactory.createFeeder(second)
+
+        connect(inputFeeder.input.queue, outputFeeder.output.queue, transformers)
+        connect(outputFeeder.input.queue, inputFeeder.output.queue, transformers.reversed(), false)
 
         for(progress in progresses){
             progress.start()
         }
 
-        first.start()
-        second.start()
+        inputFeeder.start()
+        outputFeeder.start()
 
         Runtime.getRuntime().addShutdownHook(object : Thread() {
             override fun run() {
@@ -60,8 +67,8 @@ class Starter {
                     progress.stop()
                 }
 
-                first.stop()
-                second.stop()
+                inputFeeder.stop()
+                outputFeeder.stop()
             }
         })
 

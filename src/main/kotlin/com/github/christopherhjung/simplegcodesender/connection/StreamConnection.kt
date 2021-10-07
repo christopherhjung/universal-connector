@@ -1,5 +1,6 @@
 package com.github.christopherhjung.simplegcodesender.connection
 
+import com.github.christopherhjung.simplegcodesender.FeederContext
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.concurrent.Semaphore
@@ -15,9 +16,9 @@ abstract class StreamConnection : Connection(){
 
     private var start = true
 
-    override fun requestInputStream(): InputStream {
+    override fun requestInputStream(context: FeederContext<*>): InputStream {
         if(start){
-            output.interrupt()
+            context.output.interrupt()
             while(true){
                 try{
                     inputSemaphore.acquire()
@@ -34,10 +35,10 @@ abstract class StreamConnection : Connection(){
         return getInputStream()
     }
 
-    override fun requestOutputStream(): OutputStream {
+    override fun requestOutputStream(context: FeederContext<*>): OutputStream {
         if(start){
             inputSemaphore.release()
-            input.interrupt()
+            context.input.interrupt()
             while(true){
                 try{
                     enterSemaphore.acquire()
