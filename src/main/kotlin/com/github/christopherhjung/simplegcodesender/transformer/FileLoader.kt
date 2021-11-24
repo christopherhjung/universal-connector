@@ -1,8 +1,12 @@
 package com.github.christopherhjung.simplegcodesender.transformer
 
+import com.github.christopherhjung.simplegcodesender.ConfigScope
 import java.io.File
 import java.io.FileNotFoundException
 
+fun ConfigScope.fileLoader(dir: String = "./", pattern: String = "^/(.+)$"){
+    add(FileLoader(dir, pattern))
+}
 
 class FileLoader(dir: String = "./", pattern: String = "^/(.+)$" ) : Transformer{
     private val notify = Notifier()

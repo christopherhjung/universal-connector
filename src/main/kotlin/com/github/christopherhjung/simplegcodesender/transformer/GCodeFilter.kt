@@ -1,5 +1,11 @@
 package com.github.christopherhjung.simplegcodesender.transformer
 
+import com.github.christopherhjung.simplegcodesender.ConfigScope
+
+fun ConfigScope.gCodeFilter(){
+    add(GCodeFilter())
+}
+
 class GCodeFilter() : Transformer {
     override fun createForwardWorker(): List<Worker> {
         return listOf(GCodeWorker())
@@ -46,8 +52,6 @@ class GCodeWorker(private val speedMemory : Boolean = true) : Worker(){
                     g1Speed
                 }
             }
-        }else if(cmd.startsWith("G28") || cmd.startsWith("M84")){
-            return
         }
 
         adapter.offer(GCode.withChecksum(cmd))
@@ -64,23 +68,11 @@ class GCodeWorker(private val speedMemory : Boolean = true) : Worker(){
             return
         }
 
-        line = line.uppercase()
-
-        if(line == "R"){
-            return adapter.offer("FIRMWARE_RESTART")
-        }
-
-        if(line == "H"){
-            return adapter.offer("G28")
-        }
-
-        if(line == "S"){
-            return adapter.offer("M84")
-        }
-
-        if(line.matches("([^A-Z]|[A-Z_]{2}).*".toRegex())){
+        if(line.matches("([^A-Z]|[A-Z_]{2}).*".toRegex(RegexOption.IGNORE_CASE))){
             return adapter.offer(line)
         }
+
+        line = line.uppercase()
 
         val parts = line.split(" +".toRegex())
         var currentCommand = ""

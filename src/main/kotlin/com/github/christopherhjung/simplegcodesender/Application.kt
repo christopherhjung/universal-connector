@@ -39,6 +39,7 @@ class Cli : CliktCommand(name="cli") {
         map["StdOutConnection"] = StdOut::class
         map["SerialConnection"] = Serial::class
         map["GCodeFilter"] = GCodeFilter::class
+        map["GCodeCommands"] = GCodeCommands::class
         map["Loopback"] = Loopback::class
         map["OkBuffer"] = GCodeControl::class
         map["OkFilter"] = OkFilter::class

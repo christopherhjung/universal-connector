@@ -1,6 +1,10 @@
 package com.github.christopherhjung.simplegcodesender.transformer
 
+import com.github.christopherhjung.simplegcodesender.ConfigScope
 
+fun ConfigScope.positionObserver(time: Number){
+    add(PositionObserver(time))
+}
 
 class PositionObserver(time: Number) : Transformer {
     private val part = PositionObserverWorker(time.toLong())

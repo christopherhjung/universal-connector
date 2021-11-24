@@ -1,7 +1,10 @@
 package com.github.christopherhjung.simplegcodesender
 
+
+import com.github.christopherhjung.simplegcodesender.connection.Client
 import com.github.christopherhjung.simplegcodesender.connection.Connection
-import com.github.christopherhjung.simplegcodesender.transformer.Transformer
+import com.github.christopherhjung.simplegcodesender.connection.StdInOut
+import com.github.christopherhjung.simplegcodesender.transformer.*
 import java.io.File
 
 class Config(val input: Connection, val output: Connection, val transformers: List<Transformer>){

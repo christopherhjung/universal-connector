@@ -1,5 +1,11 @@
 package com.github.christopherhjung.simplegcodesender.transformer
 
+import com.github.christopherhjung.simplegcodesender.Config
+import com.github.christopherhjung.simplegcodesender.ConfigScope
+
+fun ConfigScope.okFilter(){
+    add(OkFilter())
+}
 
 class OkFilter() : Transformer{
     private val part = OkFilterWorker()

@@ -1,8 +1,12 @@
 package com.github.christopherhjung.simplegcodesender.transformer
 
+import com.github.christopherhjung.simplegcodesender.ConfigScope
 import java.text.SimpleDateFormat
 import java.util.*
 
+fun ConfigScope.timeLogging(){
+    add(TimeLogging())
+}
 
 class TimeLogging() : Transformer {
     val part = TimeLoggingWorker()

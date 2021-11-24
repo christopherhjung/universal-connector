@@ -1,8 +1,13 @@
 package com.github.christopherhjung.simplegcodesender.transformer
 
+import com.github.christopherhjung.simplegcodesender.ConfigScope
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+
+fun ConfigScope.gCodeControl(){
+    add(GCodeControl())
+}
 
 class GCodeControl() : Transformer {
     val sem = Semaphore(1)
